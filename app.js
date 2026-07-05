@@ -1,7 +1,7 @@
 "use strict";
 
 const STORAGE_KEY = "straw-bale-recorder-v1";
-const CROPS = ["Wheat", "Barley", "Spring Barley", "Oats"];
+const CROPS = ["Wheat", "Barley", "Spring Barley", "Oats", "Hay"];
 const DEFAULT_MAP_CENTER = [52.569259, 1.406654];
 const DEFAULT_MAP_RADIUS_METRES = 16093;
 
@@ -1443,25 +1443,27 @@ function makeXlsxFiles(fieldRows, loadRows, stocktakeRows) {
     <font><sz val="11"/><name val="Calibri"/></font>
     <font><sz val="11"/><name val="Calibri"/><family val="2"/></font>
   </fonts>
-  <fills count="6">
+  <fills count="7">
     <fill><patternFill patternType="none"/></fill>
     <fill><patternFill patternType="gray125"/></fill>
     <fill><patternFill patternType="solid"><fgColor rgb="FF4F8F46"/><bgColor indexed="64"/></patternFill></fill>
     <fill><patternFill patternType="solid"><fgColor rgb="FFDFBD56"/><bgColor indexed="64"/></patternFill></fill>
     <fill><patternFill patternType="solid"><fgColor rgb="FFD78632"/><bgColor indexed="64"/></patternFill></fill>
     <fill><patternFill patternType="solid"><fgColor rgb="FF4D8F9E"/><bgColor indexed="64"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FF8FA84F"/><bgColor indexed="64"/></patternFill></fill>
   </fills>
   <borders count="2">
     <border><left/><right/><top/><bottom/><diagonal/></border>
     <border><left/><right/><top/><bottom style="thin"><color indexed="64"/></bottom><diagonal/></border>
   </borders>
   <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
-  <cellXfs count="8">
+  <cellXfs count="9">
     <xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>
     <xf numFmtId="0" fontId="0" fillId="2" borderId="0" xfId="0" applyFill="1"/>
     <xf numFmtId="0" fontId="0" fillId="3" borderId="0" xfId="0" applyFill="1"/>
     <xf numFmtId="0" fontId="0" fillId="4" borderId="0" xfId="0" applyFill="1"/>
     <xf numFmtId="0" fontId="0" fillId="5" borderId="0" xfId="0" applyFill="1"/>
+    <xf numFmtId="0" fontId="0" fillId="6" borderId="0" xfId="0" applyFill="1"/>
     <xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyFill="1"/>
     <xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1"/>
     <xf numFmtId="0" fontId="1" fillId="0" borderId="1" xfId="0" applyFont="1" applyBorder="1"/>
@@ -1516,7 +1518,7 @@ function rowMatches(row, expected) {
 }
 
 function headerStyleId(columnIndex) {
-  return columnIndex === 6 ? 7 : 6;
+  return columnIndex === 6 ? 8 : 7;
 }
 
 function makeBasicSheetXml(rows, widths) {
@@ -1524,7 +1526,7 @@ function makeBasicSheetXml(rows, widths) {
     const rowNumber = rowIndex + 1;
     const cells = row.map((value, columnIndex) => {
       const cellRef = `${columnName(columnIndex + 1)}${rowNumber}`;
-      const style = rowIndex === 0 ? ` s="6"` : "";
+      const style = rowIndex === 0 ? ` s="7"` : "";
       if (typeof value === "number" && Number.isFinite(value)) {
         return `<c r="${cellRef}"${style}><v>${value}</v></c>`;
       }
@@ -1557,6 +1559,8 @@ function cropStyleId(value) {
       return 3;
     case "Spring Barley":
       return 4;
+    case "Hay":
+      return 5;
     default:
       return 0;
   }
@@ -1755,6 +1759,7 @@ function normalizeCrop(value) {
   if (crop.includes("wheat")) return "Wheat";
   if (crop.includes("barley")) return "Barley";
   if (crop.includes("oat")) return "Oats";
+  if (crop.includes("hay")) return "Hay";
   return "Other";
 }
 

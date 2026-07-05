@@ -10,6 +10,7 @@
   --barley: #dfbd56;
   --oats: #d78632;
   --spring: #4d8f9e;
+  --hay: #8fa84f;
   --brand: #24442f;
   --brand-2: #d78632;
   --danger: #a73529;
@@ -206,6 +207,10 @@ main {
 
 .crop-total[data-crop="Oats"] {
   border-left-color: var(--oats);
+}
+
+.crop-total[data-crop="Hay"] {
+  border-left-color: var(--hay);
 }
 
 .crop-total span,
