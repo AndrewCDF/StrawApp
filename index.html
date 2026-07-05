@@ -1,0 +1,440 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#24442f">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Straw Bales">
+    <title>Straw Bale Records</title>
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="preconnect" href="https://unpkg.com">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="styles.css?v=20260604-1">
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Harvest <span id="seasonYear"></span></p>
+          <h1>Straw Bales</h1>
+        </div>
+        <button class="icon-button" id="exportTopButton" type="button" aria-label="Export XLSX" title="Export XLSX">
+          <span aria-hidden="true">⇩</span>
+        </button>
+      </header>
+
+      <main>
+        <section class="view active" id="dashboardView" aria-label="Dashboard">
+          <div class="hero-total">
+            <span>Total bales</span>
+            <strong id="seasonTotal">0</strong>
+          </div>
+
+          <div class="crop-grid" id="cropTotals"></div>
+
+          <div class="season-stats">
+            <article>
+              <span>Hectares done</span>
+              <strong id="hectaresDone">0</strong>
+            </article>
+          </div>
+
+          <div class="quick-actions">
+            <button class="primary-action" id="addFieldButton" type="button">Add field</button>
+            <button class="secondary-action" id="startFieldButton" type="button">Start field</button>
+          </div>
+
+          <section class="panel">
+            <div class="panel-heading">
+              <h2>Current field</h2>
+            </div>
+            <div id="currentField"></div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-heading">
+              <h2>Recent fields</h2>
+              <button class="text-button" data-nav="fields" type="button">View all</button>
+            </div>
+            <div class="field-list compact" id="recentFields"></div>
+          </section>
+        </section>
+
+        <section class="view" id="mapView" aria-label="Map">
+          <div class="map-wrap">
+            <div id="map"></div>
+            <div class="map-prompt" id="mapPrompt">Tap the field location to drop a pin</div>
+            <div class="map-fallback" id="mapFallback">
+              <strong>Map unavailable</strong>
+              <span>Coordinates and location capture still work.</span>
+            </div>
+          </div>
+          <div class="map-actions">
+            <button class="primary-action" id="pinCurrentButton" type="button">Current location</button>
+            <button class="secondary-action" id="clearPendingPinButton" type="button">Clear</button>
+          </div>
+        </section>
+
+        <section class="view" id="fieldsView" aria-label="Fields">
+          <div class="toolbar">
+            <input id="fieldSearch" type="search" placeholder="Search fields">
+            <button class="primary-action small" id="addFieldButtonFields" type="button">Add</button>
+          </div>
+          <div class="field-list" id="fieldList"></div>
+        </section>
+
+        <section class="view" id="stockView" aria-label="Stock">
+          <div class="stock-summary">
+            <article class="stock-primary">
+              <span>Estimated stock</span>
+              <strong id="estimatedStock">0</strong>
+            </article>
+            <article>
+              <span>Latest stocktake</span>
+              <strong id="latestStocktakeTotal">0</strong>
+            </article>
+            <article>
+              <span>Removed since count</span>
+              <strong id="removedSinceStocktake">0</strong>
+            </article>
+          </div>
+
+          <div class="quick-actions">
+            <button class="primary-action" id="addStocktakeButton" type="button">New stocktake</button>
+            <button class="secondary-action" id="addLoadButton" type="button">Add load removed</button>
+          </div>
+
+          <section class="panel">
+            <div class="panel-heading">
+              <h2>Pending loads</h2>
+            </div>
+            <div class="field-list" id="pendingLoads"></div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-heading">
+              <h2>Completed loads</h2>
+            </div>
+            <div class="field-list" id="completedLoads"></div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-heading">
+              <h2>Stocktake history</h2>
+            </div>
+            <div class="field-list" id="stocktakeHistory"></div>
+          </section>
+        </section>
+
+        <section class="view" id="cartingView" aria-label="Carting">
+          <div class="stock-summary">
+            <article class="stock-primary">
+              <span>Fields to cart</span>
+              <strong id="cartingPendingCount">0</strong>
+            </article>
+            <article>
+              <span>Carted fields</span>
+              <strong id="cartingDoneCount">0</strong>
+            </article>
+            <article>
+              <span>Ready bales</span>
+              <strong id="cartingPendingBales">0</strong>
+            </article>
+          </div>
+
+          <section class="panel">
+            <div class="panel-heading">
+              <h2>To cart</h2>
+            </div>
+            <div class="field-list" id="cartingPendingFields"></div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-heading">
+              <h2>Carted</h2>
+            </div>
+            <div class="field-list" id="cartingDoneFields"></div>
+          </section>
+        </section>
+
+        <section class="view" id="spreadsheetView" aria-label="Spreadsheet">
+          <div class="sheet-filters">
+            <label>
+              Customer
+              <select id="sheetCustomerFilter"></select>
+            </label>
+            <label>
+              Farm
+              <select id="sheetFarmFilter"></select>
+            </label>
+          </div>
+          <div class="spreadsheet-bar">
+            <button class="primary-action" id="exportSheetButton" type="button">Export XLSX</button>
+            <button class="secondary-action" id="exportCsvButton" type="button">Export CSV</button>
+          </div>
+          <div class="sheet-scroll">
+            <table class="sheet-table">
+              <thead>
+                <tr>
+                  <th>Customer</th>
+                  <th>Farm</th>
+                  <th>Field Name</th>
+                  <th>Crop</th>
+                  <th>Total Bales</th>
+                  <th>Hectares</th>
+                  <th>Moisture %</th>
+                  <th>Photo Added</th>
+                  <th>Started</th>
+                  <th>Finished</th>
+                </tr>
+              </thead>
+              <tbody id="sheetRows"></tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+
+      <nav class="bottom-nav" aria-label="Main">
+        <button class="nav-button active" data-nav="dashboard" type="button">
+          <span aria-hidden="true">⌂</span>
+          <small>Home</small>
+        </button>
+        <button class="nav-button" data-nav="map" type="button">
+          <span aria-hidden="true">⌖</span>
+          <small>Map</small>
+        </button>
+        <button class="nav-button" data-nav="fields" type="button">
+          <span aria-hidden="true">▤</span>
+          <small>Fields</small>
+        </button>
+        <button class="nav-button" data-nav="stock" type="button">
+          <span aria-hidden="true">▥</span>
+          <small>Stock</small>
+        </button>
+        <button class="nav-button" data-nav="carting" type="button">
+          <span aria-hidden="true">⌁</span>
+          <small>Carting</small>
+        </button>
+        <button class="nav-button" data-nav="spreadsheet" type="button">
+          <span aria-hidden="true">▦</span>
+          <small>Sheet</small>
+        </button>
+      </nav>
+    </div>
+
+    <dialog id="fieldDialog">
+      <form method="dialog" id="fieldForm">
+        <div class="dialog-heading">
+          <h2 id="fieldDialogTitle">Field record</h2>
+          <button class="icon-button" id="closeFieldDialogButton" type="button" aria-label="Close" title="Close">×</button>
+        </div>
+
+        <input type="hidden" id="fieldId">
+
+        <label>
+          Customer name
+          <div class="autocomplete-control">
+            <input id="fieldCustomer" type="search" autocomplete="new-password" autocorrect="off" autocapitalize="none" spellcheck="false" inputmode="search">
+            <button class="autocomplete-button" id="customerDropdownButton" type="button" aria-label="Show customers">⌄</button>
+          </div>
+          <div class="suggestion-list" id="customerSuggestions"></div>
+        </label>
+
+        <label>
+          Farm name
+          <div class="autocomplete-control">
+            <input id="fieldFarm" type="search" autocomplete="new-password" autocorrect="off" autocapitalize="none" spellcheck="false" inputmode="search">
+            <button class="autocomplete-button" id="farmDropdownButton" type="button" aria-label="Show farms">⌄</button>
+          </div>
+          <div class="suggestion-list" id="farmSuggestions"></div>
+        </label>
+
+        <label>
+          Field name
+          <input id="fieldName" required autocomplete="off">
+        </label>
+
+        <div class="form-grid">
+          <label>
+            Hectares
+            <input id="fieldHectares" type="number" min="0" step="0.01" inputmode="decimal">
+          </label>
+          <label>
+            Total bales
+            <input id="fieldBales" type="number" min="0" step="1" inputmode="numeric">
+          </label>
+          <label>
+            Avg moisture %
+            <input id="fieldMoisture" type="number" min="0" max="100" step="0.1" inputmode="decimal">
+          </label>
+        </div>
+
+        <label>
+          Crop
+          <select id="fieldCrop">
+            <option>Wheat</option>
+            <option>Barley</option>
+            <option>Spring Barley</option>
+            <option>Oats</option>
+            <option>Other</option>
+          </select>
+        </label>
+
+        <div class="coordinate-row">
+          <label>
+            Latitude
+            <input id="fieldLat" type="number" step="any" inputmode="decimal">
+          </label>
+          <label>
+            Longitude
+            <input id="fieldLng" type="number" step="any" inputmode="decimal">
+          </label>
+        </div>
+
+        <button class="secondary-action full" id="setLocationButton" type="button">Current location</button>
+
+        <label>
+          Field status
+          <select id="fieldStatus">
+            <option value="not-started">Not started</option>
+            <option value="in-progress">In progress</option>
+            <option value="part-complete">Part complete</option>
+            <option value="complete">Complete</option>
+          </select>
+        </label>
+
+        <div class="form-grid">
+          <label>
+            Start time
+            <input id="fieldStartedAt" readonly>
+          </label>
+          <label>
+            Finish time
+            <input id="fieldFinishedAt" readonly>
+          </label>
+        </div>
+
+        <label>
+          Field photo
+          <input id="fieldPhoto" type="file" accept="image/*" capture="environment">
+        </label>
+        <img id="photoPreview" class="photo-preview" alt="">
+
+        <menu class="dialog-actions">
+          <button class="danger-action" id="deleteFieldButton" type="button">Delete</button>
+          <button class="amber-action" id="partCompleteButton" type="button">Part completed</button>
+          <button class="complete-action" id="completeFieldButton" type="button">Completed</button>
+          <button class="primary-action" id="saveFieldButton" value="default" type="submit">Save field</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <dialog id="startFieldDialog">
+      <form method="dialog">
+        <div class="dialog-heading">
+          <h2>Start field</h2>
+          <button class="icon-button" value="cancel" type="submit" aria-label="Close" title="Close">×</button>
+        </div>
+        <input id="startFieldSearch" type="search" placeholder="Search customer, farm or field">
+        <div class="field-list" id="startFieldList"></div>
+      </form>
+    </dialog>
+
+    <dialog id="stocktakeDialog">
+      <form method="dialog" id="stocktakeForm">
+        <div class="dialog-heading">
+          <h2>New stocktake</h2>
+          <button class="icon-button" id="closeStocktakeButton" type="button" aria-label="Close" title="Close">×</button>
+        </div>
+
+        <label>
+          Date and time
+          <input id="stocktakeDate" type="datetime-local" required>
+        </label>
+
+        <label>
+          Bales in stock
+          <input id="stocktakeBales" type="number" min="0" step="1" inputmode="numeric" required>
+        </label>
+
+        <label>
+          Notes
+          <textarea id="stocktakeNotes" class="short-textarea"></textarea>
+        </label>
+
+        <button class="primary-action full" type="submit">Save stocktake</button>
+      </form>
+    </dialog>
+
+    <dialog id="loadDialog">
+      <form method="dialog" id="loadForm">
+        <div class="dialog-heading">
+          <h2 id="loadDialogTitle">Add load removed</h2>
+          <button class="icon-button" id="closeLoadButton" type="button" aria-label="Close" title="Close">×</button>
+        </div>
+
+        <input id="loadId" type="hidden">
+
+        <label>
+          Use
+          <select id="loadUse">
+            <option value="sold">Sold</option>
+            <option value="own-use">Own use</option>
+          </select>
+        </label>
+
+        <label>
+          Date and time
+          <input id="loadDate" type="datetime-local" required>
+        </label>
+
+        <label>
+          Number of bales
+          <input id="loadBales" type="number" min="1" step="1" inputmode="numeric" required>
+        </label>
+
+        <div class="sold-load-fields" id="soldLoadFields">
+          <label>
+            Vehicle registration
+            <div class="autocomplete-control">
+              <input id="loadVehicleReg" type="search" autocomplete="new-password" autocorrect="off" autocapitalize="characters" spellcheck="false" inputmode="search">
+              <button class="autocomplete-button" id="vehicleRegDropdownButton" type="button" aria-label="Show vehicle registrations">⌄</button>
+            </div>
+            <div class="suggestion-list" id="vehicleRegSuggestions"></div>
+          </label>
+
+          <label>
+            Driver name
+            <div class="autocomplete-control">
+              <input id="loadDriver" type="search" autocomplete="new-password" autocorrect="off" autocapitalize="words" spellcheck="false" inputmode="search">
+              <button class="autocomplete-button" id="driverDropdownButton" type="button" aria-label="Show drivers">⌄</button>
+            </div>
+            <div class="suggestion-list" id="driverSuggestions"></div>
+          </label>
+
+          <label>
+            Load weight
+            <input id="loadWeight" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Enter later if needed">
+          </label>
+        </div>
+
+        <label>
+          Notes
+          <textarea id="loadNotes" class="short-textarea"></textarea>
+        </label>
+
+        <menu class="dialog-actions">
+          <button class="danger-action" id="deleteLoadButton" type="button">Delete</button>
+          <button class="secondary-action" id="savePendingLoadButton" type="button">Save pending</button>
+          <button class="complete-action" id="completeLoadButton" type="button">Complete load</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="app.js?v=20260604-1"></script>
+  </body>
+</html>

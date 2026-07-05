@@ -1,0 +1,9 @@
+{
+  "name": "Straw Bale Records",
+  "short_name": "Straw Bales",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#fbfcf7",
+  "theme_color": "#24442f",
+  "orientation": "portrait"
+}

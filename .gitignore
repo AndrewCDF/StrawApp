@@ -1,0 +1,9 @@
+.DS_Store
+__pycache__/
+*.py[cod]
+
+# Local app data can include customer records and base64 field photos.
+data/*.json
+
+# Excel temporary lock files.
+~$*.xlsx
