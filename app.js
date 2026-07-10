@@ -74,6 +74,11 @@ function collectElements() {
     "sheetCustomerFilter",
     "sheetFarmFilter",
     "fieldSearch",
+    "updateAppButton",
+    "updateDialog",
+    "updateResult",
+    "updateOutput",
+    "reloadAppButton",
     "mapFallback",
     "mapPrompt",
     "fieldDialog",
@@ -148,6 +153,8 @@ function bindEvents() {
   document.getElementById("pinCurrentButton").addEventListener("click", centreMapOnCurrentLocation);
   document.getElementById("clearPendingPinButton").addEventListener("click", clearPendingPin);
   document.getElementById("setLocationButton").addEventListener("click", fillCurrentLocation);
+  els.updateAppButton.addEventListener("click", updateAppFromGithub);
+  els.reloadAppButton.addEventListener("click", () => window.location.reload());
   document.getElementById("exportTopButton").addEventListener("click", exportXlsx);
   document.getElementById("exportSheetButton").addEventListener("click", exportXlsx);
   document.getElementById("exportCsvButton").addEventListener("click", exportCsv);
@@ -265,6 +272,42 @@ async function saveServerState() {
   } catch (error) {
     serverStorageAvailable = false;
     showToast("Saved on this phone. Pi sync is offline.");
+  }
+}
+
+async function updateAppFromGithub() {
+  if (!serverStorageAvailable) {
+    showToast("Pi server is offline");
+    return;
+  }
+
+  els.updateResult.textContent = "Pulling latest version from GitHub...";
+  els.updateOutput.textContent = "";
+  els.reloadAppButton.hidden = true;
+  els.updateDialog.showModal();
+  els.updateAppButton.disabled = true;
+
+  try {
+    const response = await fetch("/api/update", {
+      method: "POST",
+      cache: "no-store"
+    });
+    const result = await response.json();
+    const beforeAfter = result.before && result.after ? `\n${result.before} → ${result.after}` : "";
+
+    els.updateResult.textContent = result.ok
+      ? (result.changed ? "Updated. Reload the app to use the new version." : "Already up to date.")
+      : (result.message || "Update failed.");
+    els.updateOutput.textContent = `${result.output || "No Git output."}${beforeAfter}`;
+    els.reloadAppButton.hidden = !result.ok;
+    showToast(result.ok ? "Update checked" : "Update failed");
+  } catch (error) {
+    els.updateResult.textContent = "Could not contact the Pi update service.";
+    els.updateOutput.textContent = error.message || String(error);
+    els.reloadAppButton.hidden = true;
+    showToast("Update failed");
+  } finally {
+    els.updateAppButton.disabled = false;
   }
 }
 

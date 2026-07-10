@@ -7,6 +7,7 @@ import argparse
 import json
 import mimetypes
 import os
+import subprocess
 from http import HTTPStatus
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -58,6 +59,14 @@ class StrawAppHandler(SimpleHTTPRequestHandler):
 
         self.send_json({"ok": True})
 
+    def do_POST(self):
+        route = urlparse(self.path).path
+        if route == "/api/update":
+            self.send_json(run_git_update())
+            return
+
+        self.send_error(HTTPStatus.NOT_FOUND)
+
     def send_json(self, data, status=HTTPStatus.OK):
         body = json.dumps(data, ensure_ascii=False).encode("utf-8")
         self.send_response(status)
@@ -96,6 +105,64 @@ def normalise_state(data):
 
 def empty_state():
     return {"fields": [], "stocktakes": [], "loads": []}
+
+
+def run_git_command(args):
+    environment = os.environ.copy()
+    environment["GIT_TERMINAL_PROMPT"] = "0"
+    return subprocess.run(
+        args,
+        cwd=APP_DIR,
+        env=environment,
+        capture_output=True,
+        check=False,
+        text=True,
+        timeout=120,
+    )
+
+
+def run_git_update():
+    if not (APP_DIR / ".git").exists():
+        return {
+            "ok": False,
+            "message": "This app folder is not a Git repository.",
+            "output": "",
+        }
+
+    try:
+        before = run_git_command(["git", "rev-parse", "--short", "HEAD"])
+        pull = run_git_command(["git", "pull", "--ff-only"])
+        after = run_git_command(["git", "rev-parse", "--short", "HEAD"])
+    except subprocess.TimeoutExpired:
+        return {
+            "ok": False,
+            "message": "Update timed out while waiting for GitHub.",
+            "output": "git pull took longer than 120 seconds",
+        }
+    except OSError as error:
+        return {
+            "ok": False,
+            "message": "Unable to run git on this Pi.",
+            "output": str(error),
+        }
+
+    output = "\n".join(
+        item.strip()
+        for item in [pull.stdout, pull.stderr]
+        if item and item.strip()
+    )
+    before_hash = before.stdout.strip()
+    after_hash = after.stdout.strip()
+    changed = bool(before_hash and after_hash and before_hash != after_hash)
+
+    return {
+        "ok": pull.returncode == 0,
+        "changed": changed,
+        "message": "Update complete." if pull.returncode == 0 else "Update failed.",
+        "before": before_hash,
+        "after": after_hash,
+        "output": output,
+    }
 
 
 def main():
