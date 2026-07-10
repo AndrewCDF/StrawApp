@@ -54,7 +54,7 @@ function collectElements() {
   [
     "seasonYear",
     "seasonTotal",
-    "hectaresDone",
+    "customerTotals",
     "currentField",
     "cropTotals",
     "recentFields",
@@ -479,11 +479,7 @@ function hideSuggestionsAfterBlur(container) {
 
 function renderTotals() {
   const total = state.fields.reduce((sum, field) => sum + numberValue(field.bales), 0);
-  const completedHectares = state.fields
-    .filter(isFieldCompleted)
-    .reduce((sum, field) => sum + numberValue(field.hectares), 0);
   els.seasonTotal.textContent = formatNumber(total);
-  els.hectaresDone.textContent = formatNumber(completedHectares);
 
   els.cropTotals.innerHTML = CROPS.map((crop) => {
     const cropTotal = state.fields
@@ -496,6 +492,29 @@ function renderTotals() {
       </article>
     `;
   }).join("");
+
+  renderCustomerTotals();
+}
+
+function renderCustomerTotals() {
+  const totals = new Map();
+  state.fields.forEach((field) => {
+    const customer = field.customer?.trim() || "No customer";
+    totals.set(customer, (totals.get(customer) || 0) + numberValue(field.bales));
+  });
+
+  const rows = [...totals.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .map(([customer, bales]) => `
+      <div class="customer-total-row">
+        <span>${escapeHtml(customer)}</span>
+        <strong>${formatNumber(bales)}</strong>
+      </div>
+    `);
+
+  els.customerTotals.innerHTML = rows.length
+    ? rows.join("")
+    : `<div class="empty-state compact-empty">No customer totals yet</div>`;
 }
 
 function renderCurrentField() {

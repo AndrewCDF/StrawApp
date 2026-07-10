@@ -137,12 +137,6 @@ main {
   margin: 12px 0;
 }
 
-.season-stats {
-  display: grid;
-  margin: 12px 0;
-}
-
-.season-stats article,
 .stock-summary article {
   align-items: center;
   background: var(--panel);
@@ -154,7 +148,6 @@ main {
   padding: 12px 14px;
 }
 
-.season-stats span,
 .stock-summary span {
   color: var(--muted);
   font-size: 0.78rem;
@@ -162,7 +155,6 @@ main {
   text-transform: uppercase;
 }
 
-.season-stats strong,
 .stock-summary strong {
   color: var(--brand);
   font-size: 2.2rem;
@@ -232,6 +224,48 @@ main {
   font-size: 2.1rem;
   line-height: 1.05;
   margin-top: 6px;
+}
+
+.customer-totals-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  margin: 12px 0;
+  padding: 12px;
+}
+
+.customer-totals-list {
+  display: grid;
+  gap: 8px;
+  max-height: 220px;
+  overflow: auto;
+}
+
+.customer-total-row {
+  align-items: center;
+  background: #f5f7f0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  min-height: 52px;
+  padding: 10px 12px;
+}
+
+.customer-total-row span {
+  color: var(--ink);
+  font-weight: 850;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.customer-total-row strong {
+  color: var(--brand);
+  font-size: 1.5rem;
+  line-height: 1;
 }
 
 .quick-actions,
