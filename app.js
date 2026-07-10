@@ -1034,23 +1034,30 @@ function fitDefaultMapArea() {
 }
 
 function makeFieldIcon(field) {
+  const baleLabel = makePinBaleLabel(field.bales);
   return L.divIcon({
     className: "crop-marker",
-    html: `<span style="background:${fieldStatusColor(field)}"></span>`,
-    iconSize: [24, 24],
-    iconAnchor: [12, 24],
-    popupAnchor: [0, -22]
+    html: `<span style="background:${fieldStatusColor(field)}"><b>${escapeHtml(baleLabel)}</b></span>`,
+    iconSize: [44, 44],
+    iconAnchor: [22, 44],
+    popupAnchor: [0, -42]
   });
 }
 
 function makePendingIcon() {
   return L.divIcon({
     className: "crop-marker pending",
-    html: "<span></span>",
-    iconSize: [24, 24],
-    iconAnchor: [12, 24],
-    popupAnchor: [0, -22]
+    html: "<span><b>+</b></span>",
+    iconSize: [44, 44],
+    iconAnchor: [22, 44],
+    popupAnchor: [0, -42]
   });
+}
+
+function makePinBaleLabel(value) {
+  const bales = Math.round(numberValue(value));
+  if (bales >= 10000) return `${Math.round(bales / 1000)}k`;
+  return String(bales);
 }
 
 function setPendingPin(lat, lng) {
