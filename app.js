@@ -55,7 +55,6 @@ function collectElements() {
     "seasonYear",
     "seasonTotal",
     "customerTotals",
-    "currentField",
     "cropTotals",
     "recentFields",
     "fieldList",
@@ -101,15 +100,11 @@ function collectElements() {
     "fieldLng",
     "fieldPhoto",
     "fieldStatus",
-    "fieldStartedAt",
     "fieldFinishedAt",
     "photoPreview",
     "deleteFieldButton",
     "partCompleteButton",
     "completeFieldButton",
-    "startFieldDialog",
-    "startFieldSearch",
-    "startFieldList",
     "stocktakeDialog",
     "stocktakeForm",
     "closeStocktakeButton",
@@ -148,7 +143,6 @@ function bindEvents() {
   });
 
   document.getElementById("addFieldButton").addEventListener("click", startDropPinMode);
-  document.getElementById("startFieldButton").addEventListener("click", openStartFieldDialog);
   document.getElementById("addFieldButtonFields").addEventListener("click", startDropPinMode);
   document.getElementById("pinCurrentButton").addEventListener("click", centreMapOnCurrentLocation);
   document.getElementById("clearPendingPinButton").addEventListener("click", clearPendingPin);
@@ -178,7 +172,6 @@ function bindEvents() {
   els.partCompleteButton.addEventListener("click", () => saveFieldWithStatus("part-complete"));
   els.completeFieldButton.addEventListener("click", () => saveFieldWithStatus("complete"));
   els.fieldPhoto.addEventListener("change", handlePhotoSelection);
-  els.startFieldSearch.addEventListener("input", renderStartFieldList);
   els.stocktakeForm.addEventListener("submit", saveStocktake);
   els.closeStocktakeButton.addEventListener("click", () => els.stocktakeDialog.close());
   els.loadForm.addEventListener("submit", (event) => event.preventDefault());
@@ -344,10 +337,8 @@ function updateMapPrompt() {
 function render() {
   renderTotals();
   renderSheetFilters();
-  renderCurrentField();
   renderRecentFields();
   renderFieldList();
-  renderStartFieldList();
   renderStock();
   renderCarting();
   renderSheet();
@@ -517,19 +508,6 @@ function renderCustomerTotals() {
     : `<div class="empty-state compact-empty">No customer totals yet</div>`;
 }
 
-function renderCurrentField() {
-  const current = [...state.fields]
-    .filter(isFieldInProgress)
-    .sort((a, b) => new Date(b.startedAt || 0) - new Date(a.startedAt || 0))[0];
-
-  if (!current) {
-    els.currentField.innerHTML = `<div class="empty-state">No field in progress</div>`;
-    return;
-  }
-
-  els.currentField.innerHTML = renderFieldCards([current], true);
-}
-
 function renderRecentFields() {
   const recent = [...state.fields]
     .filter(isFieldCompleted)
@@ -603,12 +581,7 @@ document.addEventListener("click", (event) => {
   if (!card) return;
   const field = state.fields.find((item) => item.id === card.dataset.edit);
   if (field) {
-    const isStartingField = els.startFieldDialog?.open;
-    const shouldPromptPhoto = isStartingField && !field.photo;
-    if (els.startFieldDialog?.open) els.startFieldDialog.close();
-    if (isStartingField) startField(field);
     openFieldDialog(field);
-    if (shouldPromptPhoto) promptForFieldPhoto();
   }
 });
 
@@ -895,49 +868,6 @@ function deleteCurrentLoad() {
   showToast("Load deleted");
 }
 
-function startField(field) {
-  if (!field.startedAt) {
-    field.startedAt = new Date().toISOString();
-    field.status = "in-progress";
-    field.completed = false;
-    field.finishedAt = "";
-    field.updatedAt = field.startedAt;
-    saveState();
-    render();
-  } else if (normaliseStatus(field) !== "in-progress") {
-    field.status = "in-progress";
-    field.completed = false;
-    field.finishedAt = "";
-    field.updatedAt = new Date().toISOString();
-    saveState();
-    render();
-  }
-}
-
-function renderStartFieldList() {
-  if (!els.startFieldList) return;
-  const query = els.startFieldSearch.value.trim().toLowerCase();
-  const fields = state.fields
-    .filter((field) => !isFieldCompleted(field))
-    .filter((field) => {
-      const haystack = `${field.customer || ""} ${field.farm || ""} ${field.name || ""} ${field.crop || ""}`.toLowerCase();
-      return !query || haystack.includes(query);
-    })
-    .sort(compareFields);
-  if (!fields.length) {
-    els.startFieldList.innerHTML = `<div class="empty-state">No unfinished fields</div>`;
-    return;
-  }
-  els.startFieldList.innerHTML = renderGroupedFieldCards(fields);
-}
-
-function openStartFieldDialog() {
-  els.startFieldSearch.value = "";
-  renderStartFieldList();
-  els.startFieldDialog.showModal();
-  setTimeout(() => els.startFieldSearch.focus(), 80);
-}
-
 function renderGroupedFieldCards(fields) {
   const groups = new Map();
   fields.forEach((field) => {
@@ -969,7 +899,7 @@ function getFilteredWorkedFields() {
 function renderSheet() {
   const fields = getFilteredWorkedFields();
   if (!fields.length) {
-    els.sheetRows.innerHTML = `<tr><td colspan="10">No worked fields match this filter</td></tr>`;
+    els.sheetRows.innerHTML = `<tr><td colspan="9">No worked fields match this filter</td></tr>`;
     return;
   }
   els.sheetRows.innerHTML = fields
@@ -984,7 +914,6 @@ function renderSheet() {
         <td>${formatNumber(numberValue(field.hectares))}</td>
         <td>${formatMoisture(field.moisture)}</td>
         <td>${field.photo ? "Yes" : "No"}</td>
-        <td>${escapeHtml(formatDate(field.startedAt))}</td>
         <td>${escapeHtml(formatDate(field.finishedAt))}</td>
       </tr>
     `).join("");
@@ -1114,8 +1043,7 @@ function openFieldDialog(field = null, seed = {}) {
   els.fieldCrop.value = normalizeCrop(field?.crop || seed.crop || "Wheat");
   els.fieldLat.value = field?.lat ?? seed.lat ?? pendingPin?.lat ?? "";
   els.fieldLng.value = field?.lng ?? seed.lng ?? pendingPin?.lng ?? "";
-  els.fieldStatus.value = normaliseStatus(field || {});
-  els.fieldStartedAt.value = formatDate(field?.startedAt);
+  els.fieldStatus.value = normaliseStatus(field || {}) === "part-complete" ? "part-complete" : "complete";
   els.fieldFinishedAt.value = formatDate(field?.finishedAt);
   els.fieldPhoto.value = "";
   els.deleteFieldButton.style.display = isEditing ? "inline-flex" : "none";
@@ -1128,16 +1056,8 @@ function openFieldDialog(field = null, seed = {}) {
 }
 
 function updateWorkflowButtons(isEditing) {
-  const showWorkflow = isEditing || Boolean(els.fieldId.value);
-  els.partCompleteButton.style.display = showWorkflow ? "inline-flex" : "none";
-  els.completeFieldButton.style.display = showWorkflow ? "inline-flex" : "none";
-}
-
-function promptForFieldPhoto() {
-  setTimeout(() => {
-    showToast("Take a field photo");
-    els.fieldPhoto.click();
-  }, 250);
+  els.partCompleteButton.style.display = "inline-flex";
+  els.completeFieldButton.style.display = isEditing ? "inline-flex" : "none";
 }
 
 function closeFieldDialog() {
@@ -1149,23 +1069,21 @@ function closeFieldDialog() {
 
 function saveFieldFromForm(event) {
   event.preventDefault();
-  saveFieldRecord();
+  saveFieldRecord("complete");
 }
 
 function saveFieldWithStatus(status) {
   els.fieldStatus.value = status;
-  saveFieldRecord();
+  saveFieldRecord(status);
 }
 
-function saveFieldRecord() {
-
+function saveFieldRecord(forcedStatus = "") {
   const existingId = els.fieldId.value;
   const existing = state.fields.find((field) => field.id === existingId);
   const now = new Date().toISOString();
   const wasCompleted = isFieldCompleted(existing || {});
-  const nextStatus = els.fieldStatus.value;
+  const nextStatus = forcedStatus || els.fieldStatus.value || "complete";
   const willBeCompleted = nextStatus === "complete";
-  const isActiveStatus = nextStatus === "in-progress" || nextStatus === "part-complete" || nextStatus === "complete";
   const record = {
     id: existingId || makeId(),
     customer: els.fieldCustomer.value.trim(),
@@ -1187,12 +1105,8 @@ function saveFieldRecord() {
     createdAt: existing?.createdAt || now,
     updatedAt: now
   };
-  if (isActiveStatus) {
-    record.startedAt = record.startedAt || now;
-  }
   if (willBeCompleted && !wasCompleted) {
     record.finishedAt = now;
-    record.startedAt = record.startedAt || now;
   }
   if (!willBeCompleted) {
     record.finishedAt = "";
@@ -1215,7 +1129,7 @@ function saveFieldRecord() {
   saveState();
   els.fieldDialog.close();
   render();
-  showToast("Field saved");
+  showToast(willBeCompleted ? "Field completed" : "Field part completed");
 }
 
 function deleteCurrentField() {
@@ -1391,7 +1305,7 @@ function makeBottomTotalRows(fields, width) {
 }
 
 function exportHeaders() {
-  return ["Customer", "Farm", "Field Name", "Crop", "Total Bales", "Hectares", "Moisture %", "Photo Added", "Started", "Finished"];
+  return ["Customer", "Farm", "Field Name", "Crop", "Total Bales", "Hectares", "Moisture %", "Photo Added", "Completed"];
 }
 
 function fieldSpreadsheetRow(field) {
@@ -1404,7 +1318,6 @@ function fieldSpreadsheetRow(field) {
     numberValue(field.hectares),
     nullableNumber(field.moisture),
     field.photo ? "Yes" : "No",
-    formatDate(field.startedAt),
     formatDate(field.finishedAt)
   ];
 }
@@ -1576,7 +1489,7 @@ function makeSheetXml(rows) {
     <col min="5" max="6" width="9.1640625" customWidth="1"/>
     <col min="7" max="7" width="9.6640625" customWidth="1"/>
     <col min="8" max="8" width="12.6640625" customWidth="1"/>
-    <col min="9" max="10" width="18.5" customWidth="1"/>
+    <col min="9" max="9" width="18.5" customWidth="1"/>
   </cols>
   <sheetData>${sheetData}</sheetData>
   <pageMargins left="0.7" right="0.7" top="0.75" bottom="0.75" header="0.3" footer="0.3"/>
@@ -1884,23 +1797,18 @@ function isFieldCarted(field) {
   return Boolean(field?.carted || field?.cartedAt);
 }
 
-function isFieldInProgress(field) {
-  return Boolean(field?.startedAt) && normaliseStatus(field) === "in-progress";
-}
-
 function normaliseStatus(field) {
   if (!field) return "not-started";
-  if (["not-started", "in-progress", "part-complete", "complete"].includes(field.status)) return field.status;
+  if (field.status === "in-progress") return "part-complete";
+  if (["not-started", "part-complete", "complete"].includes(field.status)) return field.status;
   if (field.completed === true) return "complete";
-  if (field.completed === false && field.startedAt) return "in-progress";
+  if (field.completed === false && field.startedAt) return "part-complete";
   if (numberValue(field.bales) > 0) return "complete";
   return "not-started";
 }
 
 function fieldStatusLabel(field) {
   switch (normaliseStatus(field)) {
-    case "in-progress":
-      return "In progress";
     case "part-complete":
       return "Part complete";
     case "complete":
@@ -1912,8 +1820,6 @@ function fieldStatusLabel(field) {
 
 function fieldStatusColor(field) {
   switch (normaliseStatus(field)) {
-    case "in-progress":
-      return "#4d8f9e";
     case "part-complete":
       return "#d99a2b";
     case "complete":

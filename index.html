@@ -10,7 +10,7 @@
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="preconnect" href="https://unpkg.com">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-    <link rel="stylesheet" href="styles.css?v=20260710-2">
+    <link rel="stylesheet" href="styles.css?v=20260714-2">
   </head>
   <body>
     <div class="app-shell">
@@ -47,15 +47,8 @@
 
           <div class="quick-actions">
             <button class="primary-action" id="addFieldButton" type="button">Add field</button>
-            <button class="secondary-action" id="startFieldButton" type="button">Start field</button>
+            <button class="secondary-action" data-nav="map" type="button">View map</button>
           </div>
-
-          <section class="panel">
-            <div class="panel-heading">
-              <h2>Current field</h2>
-            </div>
-            <div id="currentField"></div>
-          </section>
 
           <section class="panel">
             <div class="panel-heading">
@@ -190,8 +183,7 @@
                   <th>Hectares</th>
                   <th>Moisture %</th>
                   <th>Photo Added</th>
-                  <th>Started</th>
-                  <th>Finished</th>
+                  <th>Completed</th>
                 </tr>
               </thead>
               <tbody id="sheetRows"></tbody>
@@ -300,26 +292,18 @@
 
         <button class="secondary-action full" id="setLocationButton" type="button">Current location</button>
 
-        <label>
+        <label class="status-control">
           Field status
           <select id="fieldStatus">
-            <option value="not-started">Not started</option>
-            <option value="in-progress">In progress</option>
             <option value="part-complete">Part complete</option>
             <option value="complete">Complete</option>
           </select>
         </label>
 
-        <div class="form-grid">
-          <label>
-            Start time
-            <input id="fieldStartedAt" readonly>
-          </label>
-          <label>
-            Finish time
-            <input id="fieldFinishedAt" readonly>
-          </label>
-        </div>
+        <label>
+          Completed date and time
+          <input id="fieldFinishedAt" readonly>
+        </label>
 
         <label>
           Field photo
@@ -331,19 +315,8 @@
           <button class="danger-action" id="deleteFieldButton" type="button">Delete</button>
           <button class="amber-action" id="partCompleteButton" type="button">Part completed</button>
           <button class="complete-action" id="completeFieldButton" type="button">Completed</button>
-          <button class="primary-action" id="saveFieldButton" value="default" type="submit">Save field</button>
+          <button class="primary-action" id="saveFieldButton" value="default" type="submit">Save completed</button>
         </menu>
-      </form>
-    </dialog>
-
-    <dialog id="startFieldDialog">
-      <form method="dialog">
-        <div class="dialog-heading">
-          <h2>Start field</h2>
-          <button class="icon-button" value="cancel" type="submit" aria-label="Close" title="Close">×</button>
-        </div>
-        <input id="startFieldSearch" type="search" placeholder="Search customer, farm or field">
-        <div class="field-list" id="startFieldList"></div>
       </form>
     </dialog>
 
@@ -458,6 +431,6 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="app.js?v=20260714-1"></script>
+    <script src="app.js?v=20260714-2"></script>
   </body>
 </html>

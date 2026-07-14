@@ -708,6 +708,10 @@ label {
   text-transform: uppercase;
 }
 
+.status-control {
+  display: none;
+}
+
 .checkbox-label {
   align-items: center;
   background: #edf2e8;
