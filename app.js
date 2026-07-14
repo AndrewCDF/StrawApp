@@ -13,6 +13,8 @@ let fieldMarkers = new Map();
 let pendingMarker = null;
 let pendingPin = null;
 let activePhoto = "";
+let activeFieldLat = null;
+let activeFieldLng = null;
 let mapOpened = false;
 let dropPinMode = false;
 
@@ -102,8 +104,6 @@ function collectElements() {
     "fieldBales",
     "fieldMoisture",
     "fieldCrop",
-    "fieldLat",
-    "fieldLng",
     "fieldPhoto",
     "fieldStatus",
     "fieldFinishedAt",
@@ -164,9 +164,7 @@ function bindEvents() {
 
   document.getElementById("addFieldButton").addEventListener("click", startDropPinMode);
   document.getElementById("addFieldButtonFields").addEventListener("click", startDropPinMode);
-  document.getElementById("pinCurrentButton").addEventListener("click", centreMapOnCurrentLocation);
   document.getElementById("clearPendingPinButton").addEventListener("click", clearPendingPin);
-  document.getElementById("setLocationButton").addEventListener("click", fillCurrentLocation);
   els.closePinChoiceButton.addEventListener("click", closePinChoiceDialog);
   els.pinChoiceDialog.addEventListener("cancel", () => clearPendingPin(false));
   els.combinedFieldButton.addEventListener("click", () => choosePinnedFieldStage("combined"));
@@ -1226,8 +1224,8 @@ function openFieldDialog(field = null, seed = {}) {
   els.fieldBales.value = field?.bales ?? "";
   els.fieldMoisture.value = field?.moisture ?? "";
   els.fieldCrop.value = normalizeCrop(field?.crop || seed.crop || "Wheat");
-  els.fieldLat.value = field?.lat ?? seed.lat ?? pendingPin?.lat ?? "";
-  els.fieldLng.value = field?.lng ?? seed.lng ?? pendingPin?.lng ?? "";
+  activeFieldLat = field?.lat ?? seed.lat ?? pendingPin?.lat ?? null;
+  activeFieldLng = field?.lng ?? seed.lng ?? pendingPin?.lng ?? null;
   els.fieldStatus.value = status === "combined" || status === "part-complete" ? status : "complete";
   els.fieldFinishedAt.value = formatDate(field?.finishedAt);
   els.fieldPhoto.value = "";
@@ -1280,8 +1278,8 @@ function saveFieldRecord(forcedStatus = "") {
     crop: normalizeCrop(els.fieldCrop.value),
     bales: Math.round(numberValue(els.fieldBales.value)),
     moisture: nullableNumber(els.fieldMoisture.value),
-    lat: coordinateValue(els.fieldLat.value),
-    lng: coordinateValue(els.fieldLng.value),
+    lat: coordinateValue(activeFieldLat),
+    lng: coordinateValue(activeFieldLng),
     status: nextStatus,
     completed: willBeCompleted,
     startedAt: existing?.startedAt || "",
@@ -1328,61 +1326,6 @@ function deleteCurrentField() {
   els.fieldDialog.close();
   render();
   showToast("Field deleted");
-}
-
-function addFieldFromLocation(fallbackToBlank = false) {
-  getCurrentLocation()
-    .then(({ lat, lng }) => {
-      setPendingPin(lat, lng);
-      if (map) {
-        map.setView([lat, lng], 16);
-        showView("map");
-      }
-      openPinChoiceDialog(lat, lng);
-    })
-    .catch((error) => {
-      showToast(`${error.message}. Tap the map to drop a pin.`);
-      if (fallbackToBlank) openFieldDialog();
-    });
-}
-
-function centreMapOnCurrentLocation() {
-  getCurrentLocation()
-    .then(({ lat, lng }) => {
-      if (map) {
-        map.setView([lat, lng], 16);
-        showToast("Map centred");
-      }
-    })
-    .catch((error) => showToast(error.message));
-}
-
-function fillCurrentLocation() {
-  getCurrentLocation()
-    .then(({ lat, lng }) => {
-      els.fieldLat.value = lat;
-      els.fieldLng.value = lng;
-      setPendingPin(lat, lng);
-      showToast("Location added");
-    })
-    .catch((error) => showToast(error.message));
-}
-
-function getCurrentLocation() {
-  return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) {
-      reject(new Error("Location is not available"));
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      (position) => resolve({
-        lat: roundCoordinate(position.coords.latitude),
-        lng: roundCoordinate(position.coords.longitude)
-      }),
-      () => reject(new Error("Location permission needed")),
-      { enableHighAccuracy: true, timeout: 12000, maximumAge: 20000 }
-    );
-  });
 }
 
 function handlePhotoSelection(event) {

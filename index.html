@@ -10,7 +10,7 @@
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="preconnect" href="https://unpkg.com">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-    <link rel="stylesheet" href="styles.css?v=20260714-3">
+    <link rel="stylesheet" href="styles.css?v=20260714-4">
   </head>
   <body>
     <div class="app-shell">
@@ -65,11 +65,10 @@
             <div class="map-prompt" id="mapPrompt">Tap the field location to drop a pin</div>
             <div class="map-fallback" id="mapFallback">
               <strong>Map unavailable</strong>
-              <span>Coordinates and location capture still work.</span>
+              <span>Field records still work without the map.</span>
             </div>
           </div>
           <div class="map-actions">
-            <button class="primary-action" id="pinCurrentButton" type="button">Current location</button>
             <button class="secondary-action" id="clearPendingPinButton" type="button">Clear</button>
           </div>
         </section>
@@ -291,19 +290,6 @@
           </select>
         </label>
 
-        <div class="coordinate-row">
-          <label>
-            Latitude
-            <input id="fieldLat" type="number" step="any" inputmode="decimal">
-          </label>
-          <label>
-            Longitude
-            <input id="fieldLng" type="number" step="any" inputmode="decimal">
-          </label>
-        </div>
-
-        <button class="secondary-action full" id="setLocationButton" type="button">Current location</button>
-
         <label class="status-control">
           Field status
           <select id="fieldStatus">
@@ -506,6 +492,6 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="app.js?v=20260714-4"></script>
+    <script src="app.js?v=20260714-5"></script>
   </body>
 </html>

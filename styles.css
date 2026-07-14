@@ -286,7 +286,7 @@ main {
 }
 
 .map-actions {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr;
 }
 
 .quick-actions {
@@ -829,8 +829,7 @@ dialog form {
   justify-content: flex-end;
 }
 
-.form-grid,
-.coordinate-row {
+.form-grid {
   display: grid;
   gap: 10px;
   grid-template-columns: repeat(2, minmax(0, 1fr));
