@@ -96,11 +96,16 @@
               <span>Removed since count</span>
               <strong id="removedSinceStocktake">0</strong>
             </article>
+            <article>
+              <span>Bought in since count</span>
+              <strong id="boughtInSinceStocktake">0</strong>
+            </article>
           </div>
 
           <div class="quick-actions">
             <button class="primary-action" id="addStocktakeButton" type="button">New stocktake</button>
             <button class="secondary-action" id="addLoadButton" type="button">Add load removed</button>
+            <button class="secondary-action" id="addStockMovementButton" type="button">Bought in / ducks</button>
           </div>
 
           <section class="panel">
@@ -122,6 +127,13 @@
               <h2>Stocktake history</h2>
             </div>
             <div class="field-list" id="stocktakeHistory"></div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-heading">
+              <h2>Bought in and ducks</h2>
+            </div>
+            <div class="field-list" id="stockMovementsList"></div>
           </section>
         </section>
 
@@ -411,6 +423,54 @@
       </form>
     </dialog>
 
+    <dialog id="stockMovementDialog">
+      <form method="dialog" id="stockMovementForm">
+        <div class="dialog-heading">
+          <h2 id="stockMovementDialogTitle">Stock movement</h2>
+          <button class="icon-button" id="closeStockMovementButton" type="button" aria-label="Close" title="Close">×</button>
+        </div>
+
+        <input id="stockMovementId" type="hidden">
+
+        <label>
+          Type
+          <select id="stockMovementType">
+            <option value="ducks">Ducks at home</option>
+            <option value="bought-in">Bought in</option>
+          </select>
+        </label>
+
+        <label>
+          Date and time
+          <input id="stockMovementDate" type="datetime-local" required>
+        </label>
+
+        <label>
+          Customer / source
+          <div class="autocomplete-control">
+            <input id="stockMovementCustomer" type="search" autocomplete="new-password" autocorrect="off" autocapitalize="words" spellcheck="false" inputmode="search">
+            <button class="autocomplete-button" id="stockMovementCustomerDropdownButton" type="button" aria-label="Show customers">⌄</button>
+          </div>
+          <div class="suggestion-list" id="stockMovementCustomerSuggestions"></div>
+        </label>
+
+        <label>
+          Number of bales
+          <input id="stockMovementBales" type="number" min="1" step="1" inputmode="numeric" required>
+        </label>
+
+        <label>
+          Notes
+          <textarea id="stockMovementNotes" class="short-textarea"></textarea>
+        </label>
+
+        <menu class="dialog-actions">
+          <button class="danger-action" id="deleteStockMovementButton" type="button">Delete</button>
+          <button class="primary-action" id="saveStockMovementButton" type="submit">Save movement</button>
+        </menu>
+      </form>
+    </dialog>
+
     <dialog id="updateDialog">
       <form method="dialog">
         <div class="dialog-heading">
@@ -431,6 +491,6 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="app.js?v=20260714-2"></script>
+    <script src="app.js?v=20260714-3"></script>
   </body>
 </html>

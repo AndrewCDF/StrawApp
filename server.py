@@ -100,11 +100,12 @@ def normalise_state(data):
         "fields": data.get("fields") if isinstance(data.get("fields"), list) else [],
         "stocktakes": data.get("stocktakes") if isinstance(data.get("stocktakes"), list) else [],
         "loads": data.get("loads") if isinstance(data.get("loads"), list) else [],
+        "stockMovements": data.get("stockMovements") if isinstance(data.get("stockMovements"), list) else [],
     }
 
 
 def empty_state():
-    return {"fields": [], "stocktakes": [], "loads": []}
+    return {"fields": [], "stocktakes": [], "loads": [], "stockMovements": []}
 
 
 def run_git_command(args):

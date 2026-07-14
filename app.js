@@ -5,7 +5,7 @@ const CROPS = ["Wheat", "Barley", "Spring Barley", "Oats", "Hay"];
 const DEFAULT_MAP_CENTER = [52.569259, 1.406654];
 const DEFAULT_MAP_RADIUS_METRES = 16093;
 
-const state = { fields: [], stocktakes: [], loads: [] };
+const state = { fields: [], stocktakes: [], loads: [], stockMovements: [] };
 let serverStorageAvailable = false;
 let map = null;
 let markerLayer = null;
@@ -61,9 +61,11 @@ function collectElements() {
     "estimatedStock",
     "latestStocktakeTotal",
     "removedSinceStocktake",
+    "boughtInSinceStocktake",
     "pendingLoads",
     "completedLoads",
     "stocktakeHistory",
+    "stockMovementsList",
     "cartingPendingCount",
     "cartingDoneCount",
     "cartingPendingBales",
@@ -131,6 +133,20 @@ function collectElements() {
     "deleteLoadButton",
     "savePendingLoadButton",
     "completeLoadButton",
+    "stockMovementDialog",
+    "stockMovementForm",
+    "stockMovementDialogTitle",
+    "closeStockMovementButton",
+    "stockMovementId",
+    "stockMovementType",
+    "stockMovementDate",
+    "stockMovementCustomer",
+    "stockMovementCustomerDropdownButton",
+    "stockMovementCustomerSuggestions",
+    "stockMovementBales",
+    "stockMovementNotes",
+    "deleteStockMovementButton",
+    "saveStockMovementButton",
     "toast"
   ].forEach((id) => {
     els[id] = document.getElementById(id);
@@ -154,6 +170,7 @@ function bindEvents() {
   document.getElementById("exportCsvButton").addEventListener("click", exportCsv);
   document.getElementById("addStocktakeButton").addEventListener("click", openStocktakeDialog);
   document.getElementById("addLoadButton").addEventListener("click", () => openLoadDialog());
+  document.getElementById("addStockMovementButton").addEventListener("click", () => openStockMovementDialog());
 
   els.fieldSearch.addEventListener("input", renderFieldList);
   els.fieldCustomer.addEventListener("input", renderCustomerSuggestions);
@@ -190,6 +207,16 @@ function bindEvents() {
   els.deleteLoadButton.addEventListener("click", deleteCurrentLoad);
   els.savePendingLoadButton.addEventListener("click", () => saveLoadRecord(false));
   els.completeLoadButton.addEventListener("click", () => saveLoadRecord(true));
+  els.stockMovementForm.addEventListener("submit", saveStockMovement);
+  els.closeStockMovementButton.addEventListener("click", closeStockMovementDialog);
+  els.stockMovementDialog.addEventListener("close", releaseLoadDialogViewport);
+  els.stockMovementDialog.addEventListener("cancel", releaseLoadDialogViewport);
+  els.stockMovementType.addEventListener("change", updateStockMovementDefaults);
+  els.stockMovementCustomer.addEventListener("input", renderStockMovementCustomerSuggestions);
+  els.stockMovementCustomer.addEventListener("focus", renderStockMovementCustomerSuggestions);
+  els.stockMovementCustomer.addEventListener("blur", () => hideSuggestionsAfterBlur(els.stockMovementCustomerSuggestions));
+  els.stockMovementCustomerDropdownButton.addEventListener("click", () => showAllSuggestions(els.stockMovementCustomerSuggestions, els.stockMovementCustomer, getStockMovementCustomers()));
+  els.deleteStockMovementButton.addEventListener("click", deleteCurrentStockMovement);
   document.addEventListener("click", hideNameSuggestions);
 }
 
@@ -250,7 +277,8 @@ function normaliseClientState(value) {
   return {
     fields: Array.isArray(saved.fields) ? saved.fields : [],
     stocktakes: Array.isArray(saved.stocktakes) ? saved.stocktakes : [],
-    loads: Array.isArray(saved.loads) ? saved.loads : []
+    loads: Array.isArray(saved.loads) ? saved.loads : [],
+    stockMovements: Array.isArray(saved.stockMovements) ? saved.stockMovements : []
   };
 }
 
@@ -382,6 +410,10 @@ function renderDriverSuggestions() {
   renderSuggestions(els.driverSuggestions, els.loadDriver, getDriverNames());
 }
 
+function renderStockMovementCustomerSuggestions() {
+  renderSuggestions(els.stockMovementCustomerSuggestions, els.stockMovementCustomer, getStockMovementCustomers());
+}
+
 function getCustomerNames() {
   return uniqueValues(state.fields.map((field) => field.customer));
 }
@@ -392,6 +424,14 @@ function getVehicleRegistrations() {
 
 function getDriverNames() {
   return uniqueValues(state.loads.map((load) => load.driver));
+}
+
+function getStockMovementCustomers() {
+  return uniqueValues([
+    ...state.stockMovements.map((movement) => movement.customer),
+    ...state.loads.map((load) => load.driver),
+    "Ducks at home"
+  ]);
 }
 
 function getFarmNames() {
@@ -452,6 +492,7 @@ function suggestionInputFor(container) {
   if (container === els.farmSuggestions) return els.fieldFarm;
   if (container === els.vehicleRegSuggestions) return els.loadVehicleReg;
   if (container === els.driverSuggestions) return els.loadDriver;
+  if (container === els.stockMovementCustomerSuggestions) return els.stockMovementCustomer;
   return null;
 }
 
@@ -460,6 +501,7 @@ function hideAllNameSuggestions() {
   els.farmSuggestions.classList.remove("active");
   els.vehicleRegSuggestions.classList.remove("active");
   els.driverSuggestions.classList.remove("active");
+  els.stockMovementCustomerSuggestions.classList.remove("active");
 }
 
 function hideSuggestionsAfterBlur(container) {
@@ -593,6 +635,13 @@ document.addEventListener("click", (event) => {
     return;
   }
 
+  const stockMovementCard = event.target.closest("[data-stock-movement-edit]");
+  if (stockMovementCard) {
+    const movement = state.stockMovements.find((item) => item.id === stockMovementCard.dataset.stockMovementEdit);
+    if (movement) openStockMovementDialog(movement);
+    return;
+  }
+
   const deleteButton = event.target.closest("[data-stocktake-delete]");
   if (!deleteButton || !confirm("Delete this stocktake?")) return;
   const index = state.stocktakes.findIndex((item) => item.id === deleteButton.dataset.stocktakeDelete);
@@ -604,13 +653,23 @@ document.addEventListener("click", (event) => {
 
 function renderStock() {
   const latest = getLatestStocktake();
-  const removed = latest ? getCompletedLoads()
-    .filter((load) => new Date(load.date) >= new Date(latest.date))
-    .reduce((sum, load) => sum + numberValue(load.bales), 0) : 0;
-  const estimate = latest ? numberValue(latest.bales) - removed : 0;
+  const completedLoadsAfterCount = latest ? getCompletedLoads()
+    .filter((load) => new Date(load.date) >= new Date(latest.date)) : [];
+  const movementsAfterCount = latest ? state.stockMovements
+    .filter((movement) => new Date(movement.date) >= new Date(latest.date)) : [];
+  const removedLoads = completedLoadsAfterCount.reduce((sum, load) => sum + numberValue(load.bales), 0);
+  const ducksAllocated = movementsAfterCount
+    .filter((movement) => movement.type === "ducks")
+    .reduce((sum, movement) => sum + numberValue(movement.bales), 0);
+  const boughtIn = movementsAfterCount
+    .filter((movement) => movement.type === "bought-in")
+    .reduce((sum, movement) => sum + numberValue(movement.bales), 0);
+  const removed = removedLoads + ducksAllocated;
+  const estimate = latest ? numberValue(latest.bales) + boughtIn - removed : 0;
 
   els.latestStocktakeTotal.textContent = latest ? formatNumber(latest.bales) : "No count";
   els.removedSinceStocktake.textContent = formatNumber(removed);
+  els.boughtInSinceStocktake.textContent = formatNumber(boughtIn);
   els.estimatedStock.textContent = latest ? formatNumber(estimate) : "No count";
 
   const pending = state.loads
@@ -618,6 +677,7 @@ function renderStock() {
     .sort(compareLoadsNewestFirst);
   const completed = getCompletedLoads().sort(compareLoadsNewestFirst);
   const stocktakes = [...state.stocktakes].sort((a, b) => new Date(b.date) - new Date(a.date));
+  const movements = [...state.stockMovements].sort(compareLoadsNewestFirst);
 
   els.pendingLoads.innerHTML = pending.length
     ? pending.map(renderLoadCard).join("")
@@ -628,6 +688,9 @@ function renderStock() {
   els.stocktakeHistory.innerHTML = stocktakes.length
     ? stocktakes.map(renderStocktakeCard).join("")
     : `<div class="empty-state">No stocktakes yet</div>`;
+  els.stockMovementsList.innerHTML = movements.length
+    ? movements.map(renderStockMovementCard).join("")
+    : `<div class="empty-state">No bought in or ducks records</div>`;
 }
 
 function getLatestStocktake() {
@@ -636,6 +699,10 @@ function getLatestStocktake() {
 
 function getCompletedLoads() {
   return state.loads.filter((load) => load.completed);
+}
+
+function stockMovementTypeLabel(type) {
+  return type === "bought-in" ? "Bought in" : "Ducks at home";
 }
 
 function compareLoadsNewestFirst(a, b) {
@@ -670,6 +737,21 @@ function renderStocktakeCard(stocktake) {
         <button class="text-button" type="button" data-stocktake-delete="${escapeAttr(stocktake.id)}">Delete</button>
       </span>
     </div>
+  `;
+}
+
+function renderStockMovementCard(movement) {
+  const type = stockMovementTypeLabel(movement.type);
+  const direction = movement.type === "bought-in" ? "+" : "-";
+  const details = [movement.customer, movement.notes || ""].filter(Boolean).join(" · ");
+  return `
+    <button class="stock-card" type="button" data-stock-movement-edit="${escapeAttr(movement.id)}">
+      <span>
+        <strong>${escapeHtml(type)} · ${escapeHtml(formatDate(movement.date))}</strong>
+        <span class="field-meta">${escapeHtml(details || "Stock movement")}</span>
+      </span>
+      <span class="bale-count">${direction}${formatNumber(movement.bales)}</span>
+    </button>
   `;
 }
 
@@ -866,6 +948,78 @@ function deleteCurrentLoad() {
   closeLoadDialog();
   renderStock();
   showToast("Load deleted");
+}
+
+function openStockMovementDialog(movement = null) {
+  els.stockMovementDialogTitle.textContent = movement ? "Edit stock movement" : "Stock movement";
+  els.stockMovementId.value = movement?.id || "";
+  els.stockMovementType.value = movement?.type || "ducks";
+  els.stockMovementDate.value = dateTimeInputValue(movement?.date || new Date());
+  els.stockMovementCustomer.value = movement?.customer || (movement?.type === "ducks" ? "Ducks at home" : "");
+  els.stockMovementBales.value = movement?.bales ?? "";
+  els.stockMovementNotes.value = movement?.notes || "";
+  els.deleteStockMovementButton.style.display = movement ? "inline-flex" : "none";
+  updateStockMovementDefaults();
+  hideAllNameSuggestions();
+  document.body.classList.add("load-dialog-open");
+  els.stockMovementDialog.showModal();
+  setTimeout(() => els.stockMovementBales.focus(), 80);
+}
+
+function updateStockMovementDefaults() {
+  if (els.stockMovementType.value === "ducks" && !els.stockMovementCustomer.value.trim()) {
+    els.stockMovementCustomer.value = "Ducks at home";
+  }
+  if (els.stockMovementType.value === "bought-in" && els.stockMovementCustomer.value.trim() === "Ducks at home") {
+    els.stockMovementCustomer.value = "";
+  }
+}
+
+function closeStockMovementDialog() {
+  hideAllNameSuggestions();
+  releaseLoadDialogViewport();
+  els.stockMovementDialog.close();
+}
+
+function saveStockMovement(event) {
+  event.preventDefault();
+  if (!els.stockMovementForm.reportValidity()) return;
+  const existingId = els.stockMovementId.value;
+  const existing = state.stockMovements.find((movement) => movement.id === existingId);
+  const type = els.stockMovementType.value;
+  const now = new Date().toISOString();
+  const record = {
+    id: existingId || makeId(),
+    type,
+    date: new Date(els.stockMovementDate.value).toISOString(),
+    customer: els.stockMovementCustomer.value.trim() || (type === "ducks" ? "Ducks at home" : ""),
+    bales: Math.round(numberValue(els.stockMovementBales.value)),
+    notes: els.stockMovementNotes.value.trim(),
+    createdAt: existing?.createdAt || now,
+    updatedAt: now
+  };
+
+  if (existing) {
+    Object.assign(existing, record);
+  } else {
+    state.stockMovements.push(record);
+  }
+
+  saveState();
+  closeStockMovementDialog();
+  renderStock();
+  showToast("Stock movement saved");
+}
+
+function deleteCurrentStockMovement() {
+  const id = els.stockMovementId.value;
+  if (!id || !confirm("Delete this stock movement?")) return;
+  const index = state.stockMovements.findIndex((movement) => movement.id === id);
+  if (index >= 0) state.stockMovements.splice(index, 1);
+  saveState();
+  closeStockMovementDialog();
+  renderStock();
+  showToast("Stock movement deleted");
 }
 
 function renderGroupedFieldCards(fields) {
@@ -1256,7 +1410,8 @@ function exportXlsx() {
   const files = makeXlsxFiles(
     makeSpreadsheetRows(getFilteredWorkedFields()),
     makeLoadSpreadsheetRows(getCompletedLoads()),
-    makeStocktakeSpreadsheetRows(state.stocktakes)
+    makeStocktakeSpreadsheetRows(state.stocktakes),
+    makeStockMovementSpreadsheetRows(state.stockMovements)
   );
   const blob = makeZip(files);
   downloadBlob(blob, makeFileName("xlsx"));
@@ -1389,7 +1544,26 @@ function makeStocktakeSpreadsheetRows(stocktakes) {
   ];
 }
 
-function makeXlsxFiles(fieldRows, loadRows, stocktakeRows) {
+function makeStockMovementSpreadsheetRows(movements) {
+  const headers = ["Type", "Date and Time", "Customer / Source", "Number of Bales", "Stock Effect", "Notes"];
+  const rows = movements
+    .slice()
+    .sort((a, b) => new Date(a.date) - new Date(b.date))
+    .map((movement) => [
+      stockMovementTypeLabel(movement.type),
+      formatDate(movement.date),
+      movement.customer || "",
+      numberValue(movement.bales),
+      movement.type === "bought-in" ? numberValue(movement.bales) : -numberValue(movement.bales),
+      movement.notes || ""
+    ]);
+  if (rows.length) {
+    rows.push(["", "", "Net effect", "", rows.reduce((sum, row) => sum + numberValue(row[4]), 0), ""]);
+  }
+  return [headers, ...rows];
+}
+
+function makeXlsxFiles(fieldRows, loadRows, stocktakeRows, stockMovementRows) {
   return {
     "[Content_Types].xml": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
@@ -1399,6 +1573,7 @@ function makeXlsxFiles(fieldRows, loadRows, stocktakeRows) {
   <Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
   <Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
   <Override PartName="/xl/worksheets/sheet3.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+  <Override PartName="/xl/worksheets/sheet4.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
   <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
 </Types>`,
     "_rels/.rels": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -1411,6 +1586,7 @@ function makeXlsxFiles(fieldRows, loadRows, stocktakeRows) {
     <sheet name="Straw Bales" sheetId="1" r:id="rId1"/>
     <sheet name="Loads Removed" sheetId="2" r:id="rId2"/>
     <sheet name="Stocktakes" sheetId="3" r:id="rId3"/>
+    <sheet name="Stock Movements" sheetId="4" r:id="rId4"/>
   </sheets>
 </workbook>`,
     "xl/_rels/workbook.xml.rels": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -1418,7 +1594,8 @@ function makeXlsxFiles(fieldRows, loadRows, stocktakeRows) {
   <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>
   <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/>
   <Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet3.xml"/>
-  <Relationship Id="rId4" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+  <Relationship Id="rId4" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet4.xml"/>
+  <Relationship Id="rId5" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
 </Relationships>`,
     "xl/styles.xml": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
@@ -1454,7 +1631,8 @@ function makeXlsxFiles(fieldRows, loadRows, stocktakeRows) {
 </styleSheet>`,
     "xl/worksheets/sheet1.xml": makeSheetXml(fieldRows),
     "xl/worksheets/sheet2.xml": makeBasicSheetXml(loadRows, [15, 20, 16, 20, 16, 16, 30]),
-    "xl/worksheets/sheet3.xml": makeBasicSheetXml(stocktakeRows, [20, 16, 40])
+    "xl/worksheets/sheet3.xml": makeBasicSheetXml(stocktakeRows, [20, 16, 40]),
+    "xl/worksheets/sheet4.xml": makeBasicSheetXml(stockMovementRows, [18, 20, 22, 16, 14, 36])
   };
 }
 
