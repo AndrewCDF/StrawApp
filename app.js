@@ -539,9 +539,17 @@ function renderCustomerTotals() {
 function renderRecentFields() {
   const recent = [...state.fields]
     .filter(isFieldCompleted)
-    .sort((a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt))
+    .sort(compareCompletedNewestFirst)
     .slice(0, 4);
   els.recentFields.innerHTML = renderFieldCards(recent, true);
+}
+
+function compareCompletedNewestFirst(a, b) {
+  return fieldCompletedTime(b) - fieldCompletedTime(a);
+}
+
+function fieldCompletedTime(field) {
+  return new Date(field.finishedAt || field.createdAt || field.updatedAt || 0).getTime();
 }
 
 function renderFieldList() {
