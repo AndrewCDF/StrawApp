@@ -1238,7 +1238,7 @@ function openFieldDialog(field = null, seed = {}) {
   activeFieldLat = field?.lat ?? seed.lat ?? pendingPin?.lat ?? null;
   activeFieldLng = field?.lng ?? seed.lng ?? pendingPin?.lng ?? null;
   els.fieldStatus.value = status === "combined" || status === "part-complete" ? status : "complete";
-  els.fieldFinishedAt.value = formatDate(field?.finishedAt);
+  els.fieldFinishedAt.value = formatDate(field?.finishedAt || (status === "complete" ? new Date() : ""));
   els.fieldPhoto.value = "";
   els.deleteFieldButton.style.display = isEditing ? "inline-flex" : "none";
   updatePhotoPreview();
