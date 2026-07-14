@@ -434,6 +434,32 @@ button:disabled {
   width: 100%;
 }
 
+.field-list.compact .field-card {
+  --crop-outline: var(--line);
+  border-color: var(--crop-outline);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--crop-outline) 36%, transparent), 0 4px 14px rgba(24, 34, 26, 0.08);
+}
+
+.field-list.compact .field-card[data-crop="Wheat"] {
+  --crop-outline: var(--wheat);
+}
+
+.field-list.compact .field-card[data-crop="Barley"] {
+  --crop-outline: var(--barley);
+}
+
+.field-list.compact .field-card[data-crop="Spring Barley"] {
+  --crop-outline: var(--spring);
+}
+
+.field-list.compact .field-card[data-crop="Oats"] {
+  --crop-outline: var(--oats);
+}
+
+.field-list.compact .field-card[data-crop="Hay"] {
+  --crop-outline: var(--hay);
+}
+
 .stock-card {
   align-items: center;
   background: var(--panel);

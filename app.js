@@ -573,12 +573,13 @@ function renderFieldCards(fields, compact) {
     const location = hasLocation(field) ? "Pinned" : "No pin";
     const status = fieldStatusLabel(field);
     const photo = field.photo ? "Photo" : "No photo";
+    const crop = normalizeCrop(field.crop);
     return `
-      <button class="field-card" type="button" data-edit="${escapeAttr(field.id)}">
+      <button class="field-card" type="button" data-edit="${escapeAttr(field.id)}" data-crop="${escapeAttr(crop)}">
         <span>
           <span class="field-title">
             <strong>${escapeHtml(field.name)}</strong>
-            <span class="pill">${escapeHtml(normalizeCrop(field.crop))}</span>
+            <span class="pill">${escapeHtml(crop)}</span>
           </span>
           <span class="field-meta">${escapeHtml(recordOwner(field))} · ${formatNumber(hectares)} ha · ${location} · ${status} · ${photo}</span>
         </span>
