@@ -78,10 +78,6 @@ function collectElements() {
     "sheetFarmFilter",
     "fieldSearch",
     "updateAppButton",
-    "updateDialog",
-    "updateResult",
-    "updateOutput",
-    "reloadAppButton",
     "mapFallback",
     "mapPrompt",
     "pinChoiceDialog",
@@ -170,7 +166,6 @@ function bindEvents() {
   els.combinedFieldButton.addEventListener("click", () => choosePinnedFieldStage("combined"));
   els.baledFieldButton.addEventListener("click", () => choosePinnedFieldStage("complete"));
   els.updateAppButton.addEventListener("click", updateAppFromGithub);
-  els.reloadAppButton.addEventListener("click", () => window.location.reload());
   document.getElementById("exportTopButton").addEventListener("click", exportXlsx);
   document.getElementById("exportSheetButton").addEventListener("click", exportXlsx);
   document.getElementById("exportCsvButton").addEventListener("click", exportCsv);
@@ -308,11 +303,8 @@ async function updateAppFromGithub() {
     return;
   }
 
-  els.updateResult.textContent = "Pulling latest version from GitHub...";
-  els.updateOutput.textContent = "";
-  els.reloadAppButton.hidden = true;
-  els.updateDialog.showModal();
   els.updateAppButton.disabled = true;
+  showToast("Updating app...");
 
   try {
     const response = await fetch("/api/update", {
@@ -320,22 +312,41 @@ async function updateAppFromGithub() {
       cache: "no-store"
     });
     const result = await response.json();
-    const beforeAfter = result.before && result.after ? `\n${result.before} → ${result.after}` : "";
 
-    els.updateResult.textContent = result.ok
-      ? (result.changed ? "Updated. Reload the app to use the new version." : "Already up to date.")
-      : (result.message || "Update failed.");
-    els.updateOutput.textContent = `${result.output || "No Git output."}${beforeAfter}`;
-    els.reloadAppButton.hidden = !result.ok;
-    showToast(result.ok ? "Update checked" : "Update failed");
+    if (!result.ok) {
+      showToast(result.message || "Update failed");
+      els.updateAppButton.disabled = false;
+      return;
+    }
+
+    showToast("Restarting app...");
+    reloadWhenServerReturns();
   } catch (error) {
-    els.updateResult.textContent = "Could not contact the Pi update service.";
-    els.updateOutput.textContent = error.message || String(error);
-    els.reloadAppButton.hidden = true;
     showToast("Update failed");
-  } finally {
     els.updateAppButton.disabled = false;
   }
+}
+
+function reloadWhenServerReturns(attempt = 0) {
+  const delay = attempt < 3 ? 1600 : 2500;
+  setTimeout(async () => {
+    try {
+      const response = await fetch("/api/health", { cache: "no-store" });
+      if (response.ok) {
+        window.location.reload();
+        return;
+      }
+    } catch (error) {
+      // The service is expected to disappear briefly while systemd restarts it.
+    }
+
+    if (attempt < 24) {
+      reloadWhenServerReturns(attempt + 1);
+    } else {
+      els.updateAppButton.disabled = false;
+      showToast("Refresh the app in a moment");
+    }
+  }, delay);
 }
 
 function showView(name) {

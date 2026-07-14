@@ -8,6 +8,7 @@ import json
 import mimetypes
 import os
 import subprocess
+import threading
 from http import HTTPStatus
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -156,14 +157,29 @@ def run_git_update():
     after_hash = after.stdout.strip()
     changed = bool(before_hash and after_hash and before_hash != after_hash)
 
+    ok = pull.returncode == 0
+    if ok:
+        schedule_restart()
+
     return {
-        "ok": pull.returncode == 0,
+        "ok": ok,
         "changed": changed,
-        "message": "Update complete." if pull.returncode == 0 else "Update failed.",
+        "message": "Update complete. Restarting app." if ok else "Update failed.",
+        "restarting": ok,
         "before": before_hash,
         "after": after_hash,
         "output": output,
     }
+
+
+def schedule_restart():
+    timer = threading.Timer(0.8, restart_process)
+    timer.daemon = True
+    timer.start()
+
+
+def restart_process():
+    os._exit(0)
 
 
 def main():

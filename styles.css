@@ -369,31 +369,6 @@ button:disabled {
   width: 48px;
 }
 
-.update-result {
-  background: #edf2e8;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  color: var(--brand);
-  font-weight: 850;
-  margin: 12px 0;
-  padding: 12px;
-}
-
-.update-output {
-  background: #18221a;
-  border-radius: 8px;
-  color: #f7f8f0;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 0.78rem;
-  line-height: 1.45;
-  margin: 0 0 12px;
-  max-height: min(42dvh, 320px);
-  overflow: auto;
-  padding: 12px;
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-
 .small {
   min-height: 44px;
 }

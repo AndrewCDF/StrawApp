@@ -10,7 +10,7 @@
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="preconnect" href="https://unpkg.com">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-    <link rel="stylesheet" href="styles.css?v=20260714-4">
+    <link rel="stylesheet" href="styles.css?v=20260714-5">
   </head>
   <body>
     <div class="app-shell">
@@ -472,26 +472,9 @@
       </form>
     </dialog>
 
-    <dialog id="updateDialog">
-      <form method="dialog">
-        <div class="dialog-heading">
-          <h2>App update</h2>
-          <button class="icon-button" value="cancel" type="submit" aria-label="Close" title="Close">×</button>
-        </div>
-
-        <div class="update-result" id="updateResult">Ready to pull the latest version from GitHub.</div>
-        <pre class="update-output" id="updateOutput"></pre>
-
-        <menu class="dialog-actions">
-          <button class="secondary-action" value="cancel" type="submit">Close</button>
-          <button class="primary-action" id="reloadAppButton" type="button">Reload app</button>
-        </menu>
-      </form>
-    </dialog>
-
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="app.js?v=20260714-5"></script>
+    <script src="app.js?v=20260714-6"></script>
   </body>
 </html>
