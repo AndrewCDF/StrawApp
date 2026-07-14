@@ -10,7 +10,7 @@
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="preconnect" href="https://unpkg.com">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-    <link rel="stylesheet" href="styles.css?v=20260714-6">
+    <link rel="stylesheet" href="styles.css?v=20260714-7">
   </head>
   <body>
     <div class="app-shell">
@@ -137,71 +137,6 @@
           </section>
         </section>
 
-        <section class="view" id="cartingView" aria-label="Carting">
-          <div class="stock-summary">
-            <article class="stock-primary">
-              <span>Fields to cart</span>
-              <strong id="cartingPendingCount">0</strong>
-            </article>
-            <article>
-              <span>Carted fields</span>
-              <strong id="cartingDoneCount">0</strong>
-            </article>
-            <article>
-              <span>Ready bales</span>
-              <strong id="cartingPendingBales">0</strong>
-            </article>
-          </div>
-
-          <section class="panel">
-            <div class="panel-heading">
-              <h2>To cart</h2>
-            </div>
-            <div class="field-list" id="cartingPendingFields"></div>
-          </section>
-
-          <section class="panel">
-            <div class="panel-heading">
-              <h2>Carted</h2>
-            </div>
-            <div class="field-list" id="cartingDoneFields"></div>
-          </section>
-        </section>
-
-        <section class="view" id="spreadsheetView" aria-label="Spreadsheet">
-          <div class="sheet-filters">
-            <label>
-              Customer
-              <select id="sheetCustomerFilter"></select>
-            </label>
-            <label>
-              Farm
-              <select id="sheetFarmFilter"></select>
-            </label>
-          </div>
-          <div class="spreadsheet-bar">
-            <button class="primary-action" id="exportSheetButton" type="button">Export XLSX</button>
-            <button class="secondary-action" id="exportCsvButton" type="button">Export CSV</button>
-          </div>
-          <div class="sheet-scroll">
-            <table class="sheet-table">
-              <thead>
-                <tr>
-                  <th>Customer</th>
-                  <th>Farm</th>
-                  <th>Field Name</th>
-                  <th>Crop</th>
-                  <th>Total Bales</th>
-                  <th>Hectares</th>
-                  <th>Moisture %</th>
-                  <th>Photo Added</th>
-                  <th>Completed</th>
-                </tr>
-              </thead>
-              <tbody id="sheetRows"></tbody>
-            </table>
-          </div>
-        </section>
       </main>
 
       <nav class="bottom-nav" aria-label="Main">
@@ -220,14 +155,6 @@
         <button class="nav-button" data-nav="stock" type="button">
           <span aria-hidden="true">▥</span>
           <small>Stock</small>
-        </button>
-        <button class="nav-button" data-nav="carting" type="button">
-          <span aria-hidden="true">⌁</span>
-          <small>Carting</small>
-        </button>
-        <button class="nav-button" data-nav="spreadsheet" type="button">
-          <span aria-hidden="true">▦</span>
-          <small>Sheet</small>
         </button>
       </nav>
     </div>
@@ -476,6 +403,6 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="app.js?v=20260714-8"></script>
+    <script src="app.js?v=20260714-9"></script>
   </body>
 </html>

@@ -463,18 +463,6 @@ button:disabled {
   color: var(--brand);
 }
 
-.carting-card {
-  align-items: stretch;
-  grid-template-columns: 1fr;
-}
-
-.carting-actions {
-  display: grid;
-  gap: 8px;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  width: 100%;
-}
-
 .field-title {
   display: flex;
   flex-wrap: wrap;
@@ -545,7 +533,7 @@ button:disabled {
   bottom: 0;
   display: grid;
   gap: 4px;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   left: 0;
   padding: 8px 10px max(8px, env(safe-area-inset-bottom));
   position: fixed;

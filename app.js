@@ -68,14 +68,6 @@ function collectElements() {
     "completedLoads",
     "stocktakeHistory",
     "stockMovementsList",
-    "cartingPendingCount",
-    "cartingDoneCount",
-    "cartingPendingBales",
-    "cartingPendingFields",
-    "cartingDoneFields",
-    "sheetRows",
-    "sheetCustomerFilter",
-    "sheetFarmFilter",
     "fieldSearch",
     "updateAppButton",
     "mapFallback",
@@ -167,8 +159,6 @@ function bindEvents() {
   els.baledFieldButton.addEventListener("click", () => choosePinnedFieldStage("complete"));
   els.updateAppButton.addEventListener("click", updateAppFromGithub);
   document.getElementById("exportTopButton").addEventListener("click", exportXlsx);
-  document.getElementById("exportSheetButton").addEventListener("click", exportXlsx);
-  document.getElementById("exportCsvButton").addEventListener("click", exportCsv);
   document.getElementById("addStocktakeButton").addEventListener("click", openStocktakeDialog);
   document.getElementById("addLoadButton").addEventListener("click", () => openLoadDialog());
   document.getElementById("addStockMovementButton").addEventListener("click", () => openStockMovementDialog());
@@ -182,8 +172,6 @@ function bindEvents() {
   els.fieldFarm.addEventListener("focus", renderFarmSuggestions);
   els.fieldFarm.addEventListener("blur", () => hideSuggestionsAfterBlur(els.farmSuggestions));
   els.farmDropdownButton.addEventListener("click", () => showAllSuggestions(els.farmSuggestions, els.fieldFarm, getFarmNames()));
-  els.sheetCustomerFilter.addEventListener("change", render);
-  els.sheetFarmFilter.addEventListener("change", renderSheet);
   els.fieldForm.addEventListener("submit", saveFieldFromForm);
   els.closeFieldDialogButton.addEventListener("click", closeFieldDialog);
   els.deleteFieldButton.addEventListener("click", deleteCurrentField);
@@ -381,29 +369,10 @@ function updateMapPrompt() {
 
 function render() {
   renderTotals();
-  renderSheetFilters();
   renderRecentFields();
   renderFieldList();
   renderStock();
-  renderCarting();
-  renderSheet();
   renderMapMarkers();
-}
-
-function renderSheetFilters() {
-  const customerValue = els.sheetCustomerFilter.value;
-  const farmValue = els.sheetFarmFilter.value;
-  const workedFields = state.fields.filter(isFieldWorked);
-  const customers = uniqueValues(workedFields.map((field) => field.customer));
-  const farms = uniqueValues(workedFields
-    .filter((field) => !customerValue || field.customer === customerValue)
-    .map((field) => field.farm));
-
-  els.sheetCustomerFilter.innerHTML = renderSelectOptions(customers, "All customers");
-  els.sheetCustomerFilter.value = customers.includes(customerValue) ? customerValue : "";
-
-  els.sheetFarmFilter.innerHTML = renderSelectOptions(farms, "All farms");
-  els.sheetFarmFilter.value = farms.includes(farmValue) ? farmValue : "";
 }
 
 function renderNameOptions() {
@@ -618,24 +587,6 @@ document.addEventListener("click", (event) => {
     return;
   }
 
-  const mapButton = event.target.closest("[data-field-map]");
-  if (mapButton) {
-    focusFieldOnMap(mapButton.dataset.fieldMap);
-    return;
-  }
-
-  const cartedButton = event.target.closest("[data-field-carted]");
-  if (cartedButton) {
-    markFieldCarted(cartedButton.dataset.fieldCarted, true);
-    return;
-  }
-
-  const uncartedButton = event.target.closest("[data-field-uncarted]");
-  if (uncartedButton) {
-    markFieldCarted(uncartedButton.dataset.fieldUncarted, false);
-    return;
-  }
-
   const card = event.target.closest("[data-edit]");
   if (!card) return;
   const field = state.fields.find((item) => item.id === card.dataset.edit);
@@ -769,54 +720,6 @@ function renderStockMovementCard(movement) {
       </span>
       <span class="bale-count">${direction}${formatNumber(movement.bales)}</span>
     </button>
-  `;
-}
-
-function renderCarting() {
-  const fields = getCartingFields();
-  const pending = fields.filter((field) => !isFieldCarted(field));
-  const carted = fields.filter(isFieldCarted);
-
-  els.cartingPendingCount.textContent = formatNumber(pending.length);
-  els.cartingDoneCount.textContent = formatNumber(carted.length);
-  els.cartingPendingBales.textContent = formatNumber(pending.reduce((sum, field) => sum + numberValue(field.bales), 0));
-  els.cartingPendingFields.innerHTML = pending.length
-    ? pending.map((field) => renderCartingCard(field, false)).join("")
-    : `<div class="empty-state">No fields waiting to cart</div>`;
-  els.cartingDoneFields.innerHTML = carted.length
-    ? carted.map((field) => renderCartingCard(field, true)).join("")
-    : `<div class="empty-state">No fields ticked off yet</div>`;
-}
-
-function getCartingFields() {
-  return state.fields
-    .filter(isFieldWorked)
-    .sort(compareFields);
-}
-
-function renderCartingCard(field, carted) {
-  const location = hasLocation(field) ? "Pinned" : "No pin";
-  const details = [
-    recordOwner(field),
-    normalizeCrop(field.crop),
-    `${formatNumber(numberValue(field.bales))} bales`,
-    location,
-    carted ? `Carted ${formatDate(field.cartedAt)}` : fieldStatusLabel(field)
-  ];
-  return `
-    <article class="stock-card carting-card">
-      <span>
-        <strong>${escapeHtml(field.name)}</strong>
-        <span class="field-meta">${escapeHtml(details.filter(Boolean).join(" · "))}</span>
-      </span>
-      <span class="carting-actions">
-        <button class="secondary-action small" type="button" data-field-map="${escapeAttr(field.id)}" ${hasLocation(field) ? "" : "disabled"}>Map</button>
-        <button class="secondary-action small" type="button" data-field-directions="${escapeAttr(field.id)}" ${hasLocation(field) ? "" : "disabled"}>Directions</button>
-        ${carted
-          ? `<button class="amber-action small" type="button" data-field-uncarted="${escapeAttr(field.id)}">Undo</button>`
-          : `<button class="complete-action small" type="button" data-field-carted="${escapeAttr(field.id)}">Carted</button>`}
-      </span>
-    </article>
   `;
 }
 
@@ -1059,35 +962,8 @@ function renderGroupedFieldCards(fields) {
 }
 
 function getFilteredWorkedFields() {
-  const customer = els.sheetCustomerFilter.value;
-  const farm = els.sheetFarmFilter.value;
   return state.fields
-    .filter(isFieldWorked)
-    .filter((field) => !customer || field.customer === customer)
-    .filter((field) => !farm || field.farm === farm);
-}
-
-function renderSheet() {
-  const fields = getFilteredWorkedFields();
-  if (!fields.length) {
-    els.sheetRows.innerHTML = `<tr><td colspan="9">No worked fields match this filter</td></tr>`;
-    return;
-  }
-  els.sheetRows.innerHTML = fields
-    .sort(compareFields)
-    .map((field) => `
-      <tr>
-        <td>${escapeHtml(field.customer || "")}</td>
-        <td>${escapeHtml(field.farm || "")}</td>
-        <td>${escapeHtml(field.name)}</td>
-        <td>${escapeHtml(normalizeCrop(field.crop))}</td>
-        <td>${formatNumber(numberValue(field.bales))}</td>
-        <td>${formatNumber(numberValue(field.hectares))}</td>
-        <td>${formatMoisture(field.moisture)}</td>
-        <td>${field.photo ? "Yes" : "No"}</td>
-        <td>${escapeHtml(formatDate(field.finishedAt))}</td>
-      </tr>
-    `).join("");
+    .filter(isFieldWorked);
 }
 
 function initMap() {
