@@ -354,41 +354,24 @@ button:disabled {
   opacity: 0.48;
 }
 
-.primary-action {
+.primary-action,
+.secondary-action,
+.danger-action,
+.amber-action,
+.complete-action,
+.icon-button {
   background: var(--brand);
   color: #fff;
 }
 
-.secondary-action {
-  background: #edf2e8;
-  color: var(--brand);
-}
-
-.danger-action {
-  background: #fae7e5;
-  color: var(--danger);
-}
-
-.amber-action {
-  background: #f7e6c5;
-  color: #7a4b00;
-}
-
-.complete-action {
-  background: #dff1e4;
-  color: #1f6a35;
-}
-
 .text-button {
-  background: transparent;
-  color: var(--brand);
+  background: var(--brand);
+  color: #fff;
   min-height: 36px;
-  padding: 0;
+  padding: 0 12px;
 }
 
 .icon-button {
-  background: #edf2e8;
-  color: var(--brand);
   font-size: 1.4rem;
   height: 48px;
   min-height: 48px;
@@ -568,13 +551,14 @@ button:disabled {
 }
 
 .nav-button {
-  background: transparent;
+  background: var(--brand);
   border: 0;
   border-radius: 8px;
-  color: var(--muted);
+  color: #fff;
   display: grid;
   gap: 2px;
   min-height: 54px;
+  opacity: 0.72;
   place-items: center;
 }
 
@@ -589,8 +573,9 @@ button:disabled {
 }
 
 .nav-button.active {
-  background: #edf2e8;
-  color: var(--brand);
+  background: var(--brand);
+  color: #fff;
+  opacity: 1;
 }
 
 .map-wrap {
@@ -897,10 +882,10 @@ dialog form {
 }
 
 .suggestion-list button {
-  background: transparent;
+  background: var(--brand);
   border: 0;
-  border-bottom: 1px solid #dbe5d2;
-  color: var(--brand);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  color: #fff;
   font-size: 16px;
   font-weight: 850;
   min-height: 48px;
@@ -909,7 +894,7 @@ dialog form {
 }
 
 .suggestion-list button:active {
-  background: #e5efdc;
+  background: #18221a;
 }
 
 .suggestion-list button:last-child {
