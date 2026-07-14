@@ -1054,9 +1054,10 @@ function fitDefaultMapArea() {
 
 function makeFieldIcon(field) {
   const baleLabel = makePinBaleLabel(field.bales);
+  const outlineColor = isFieldCarted(field) ? "#fff" : "#c64232";
   return L.divIcon({
     className: "crop-marker",
-    html: `<span style="background:${fieldStatusColor(field)}"><b>${escapeHtml(baleLabel)}</b></span>`,
+    html: `<span style="background:${fieldStatusColor(field)};border-color:${outlineColor}"><b>${escapeHtml(baleLabel)}</b></span>`,
     iconSize: [44, 44],
     iconAnchor: [22, 44],
     popupAnchor: [0, -42]
