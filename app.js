@@ -34,7 +34,7 @@ window.StrawApp = {
     if (field) openFieldDialog(field);
   },
   addAt(lat, lng) {
-    openFieldDialog(null, { lat, lng });
+    openPinChoiceDialog(lat, lng);
   },
   directionsTo(id) {
     openDirectionsToField(id);
@@ -82,6 +82,10 @@ function collectElements() {
     "reloadAppButton",
     "mapFallback",
     "mapPrompt",
+    "pinChoiceDialog",
+    "closePinChoiceButton",
+    "combinedFieldButton",
+    "baledFieldButton",
     "fieldDialog",
     "fieldForm",
     "fieldDialogTitle",
@@ -163,6 +167,10 @@ function bindEvents() {
   document.getElementById("pinCurrentButton").addEventListener("click", centreMapOnCurrentLocation);
   document.getElementById("clearPendingPinButton").addEventListener("click", clearPendingPin);
   document.getElementById("setLocationButton").addEventListener("click", fillCurrentLocation);
+  els.closePinChoiceButton.addEventListener("click", closePinChoiceDialog);
+  els.pinChoiceDialog.addEventListener("cancel", () => clearPendingPin(false));
+  els.combinedFieldButton.addEventListener("click", () => choosePinnedFieldStage("combined"));
+  els.baledFieldButton.addEventListener("click", () => choosePinnedFieldStage("complete"));
   els.updateAppButton.addEventListener("click", updateAppFromGithub);
   els.reloadAppButton.addEventListener("click", () => window.location.reload());
   document.getElementById("exportTopButton").addEventListener("click", exportXlsx);
@@ -1093,7 +1101,7 @@ function initMap() {
     setPendingPin(lat, lng);
     dropPinMode = false;
     updateMapPrompt();
-    openFieldDialog(null, { lat, lng });
+    openPinChoiceDialog(lat, lng);
   });
 
   renderMapMarkers();
@@ -1116,14 +1124,15 @@ function makeFieldPopup(field) {
   const cartedAction = isFieldCarted(field)
     ? `<button type="button" onclick="window.StrawApp.unmarkCarted('${escapeAttr(field.id)}')">Undo carted</button>`
     : `<button type="button" onclick="window.StrawApp.markCarted('${escapeAttr(field.id)}')">Carted</button>`;
+  const baleText = normaliseStatus(field) === "combined" ? "Ready to bale" : `${formatNumber(numberValue(field.bales))} bales`;
   return `
     <strong>${escapeHtml(field.name)}</strong><br>
     ${escapeHtml(recordOwner(field))}<br>
-    ${escapeHtml(normalizeCrop(field.crop))} · ${formatNumber(numberValue(field.bales))} bales · ${fieldStatusLabel(field)}<br>
+    ${escapeHtml(normalizeCrop(field.crop))} · ${escapeHtml(baleText)} · ${fieldStatusLabel(field)}<br>
     ${isFieldCarted(field) ? `Carted ${escapeHtml(formatDate(field.cartedAt))}<br>` : ""}
     <span class="popup-actions">
       <button type="button" onclick="window.StrawApp.directionsTo('${escapeAttr(field.id)}')">Directions</button>
-      ${cartedAction}
+      ${isFieldWorked(field) ? cartedAction : ""}
       <button type="button" onclick="window.StrawApp.editField('${escapeAttr(field.id)}')">Edit</button>
     </span>
   `;
@@ -1136,7 +1145,7 @@ function fitDefaultMapArea() {
 }
 
 function makeFieldIcon(field) {
-  const baleLabel = makePinBaleLabel(field.bales);
+  const baleLabel = makePinBaleLabel(field);
   const outlineColor = isFieldCarted(field) ? "#fff" : "#c64232";
   return L.divIcon({
     className: "crop-marker",
@@ -1157,8 +1166,9 @@ function makePendingIcon() {
   });
 }
 
-function makePinBaleLabel(value) {
-  const bales = Math.round(numberValue(value));
+function makePinBaleLabel(field) {
+  if (normaliseStatus(field) === "combined") return "C";
+  const bales = Math.round(numberValue(field?.bales));
   if (bales >= 10000) return `${Math.round(bales / 1000)}k`;
   return String(bales);
 }
@@ -1182,11 +1192,32 @@ function clearPendingPin(showMessage = true) {
   if (showMessage) showToast("Cleared");
 }
 
+function openPinChoiceDialog(lat, lng) {
+  pendingPin = { lat, lng };
+  els.pinChoiceDialog.showModal();
+}
+
+function closePinChoiceDialog() {
+  els.pinChoiceDialog.close();
+  clearPendingPin(false);
+}
+
+function choosePinnedFieldStage(status) {
+  const seed = {
+    lat: pendingPin?.lat,
+    lng: pendingPin?.lng,
+    status
+  };
+  els.pinChoiceDialog.close();
+  openFieldDialog(null, seed);
+}
+
 function openFieldDialog(field = null, seed = {}) {
   const isEditing = Boolean(field);
   activePhoto = field?.photo || "";
+  const status = normaliseStatus(field || seed || {});
 
-  els.fieldDialogTitle.textContent = isEditing ? "Edit field" : "Add field";
+  els.fieldDialogTitle.textContent = isEditing ? "Edit field" : status === "combined" ? "Combined field" : "Baled field";
   els.fieldId.value = field?.id || "";
   els.fieldCustomer.value = field?.customer || seed.customer || "";
   els.fieldFarm.value = field?.farm || seed.farm || "";
@@ -1197,7 +1228,7 @@ function openFieldDialog(field = null, seed = {}) {
   els.fieldCrop.value = normalizeCrop(field?.crop || seed.crop || "Wheat");
   els.fieldLat.value = field?.lat ?? seed.lat ?? pendingPin?.lat ?? "";
   els.fieldLng.value = field?.lng ?? seed.lng ?? pendingPin?.lng ?? "";
-  els.fieldStatus.value = normaliseStatus(field || {}) === "part-complete" ? "part-complete" : "complete";
+  els.fieldStatus.value = status === "combined" || status === "part-complete" ? status : "complete";
   els.fieldFinishedAt.value = formatDate(field?.finishedAt);
   els.fieldPhoto.value = "";
   els.deleteFieldButton.style.display = isEditing ? "inline-flex" : "none";
@@ -1210,8 +1241,10 @@ function openFieldDialog(field = null, seed = {}) {
 }
 
 function updateWorkflowButtons(isEditing) {
+  const status = els.fieldStatus.value;
   els.partCompleteButton.style.display = "inline-flex";
-  els.completeFieldButton.style.display = isEditing ? "inline-flex" : "none";
+  els.completeFieldButton.style.display = isEditing || status !== "complete" ? "inline-flex" : "none";
+  document.getElementById("saveFieldButton").textContent = status === "combined" ? "Save combined" : "Save completed";
 }
 
 function closeFieldDialog() {
@@ -1223,7 +1256,7 @@ function closeFieldDialog() {
 
 function saveFieldFromForm(event) {
   event.preventDefault();
-  saveFieldRecord("complete");
+  saveFieldRecord(els.fieldStatus.value || "complete");
 }
 
 function saveFieldWithStatus(status) {
@@ -1283,7 +1316,7 @@ function saveFieldRecord(forcedStatus = "") {
   saveState();
   els.fieldDialog.close();
   render();
-  showToast(willBeCompleted ? "Field completed" : "Field part completed");
+  showToast(nextStatus === "combined" ? "Field marked combined" : willBeCompleted ? "Field completed" : "Field part completed");
 }
 
 function deleteCurrentField() {
@@ -1305,7 +1338,7 @@ function addFieldFromLocation(fallbackToBlank = false) {
         map.setView([lat, lng], 16);
         showView("map");
       }
-      openFieldDialog(null, { lat, lng });
+      openPinChoiceDialog(lat, lng);
     })
     .catch((error) => {
       showToast(`${error.message}. Tap the map to drop a pin.`);
@@ -1978,7 +2011,7 @@ function isFieldCarted(field) {
 function normaliseStatus(field) {
   if (!field) return "not-started";
   if (field.status === "in-progress") return "part-complete";
-  if (["not-started", "part-complete", "complete"].includes(field.status)) return field.status;
+  if (["not-started", "combined", "part-complete", "complete"].includes(field.status)) return field.status;
   if (field.completed === true) return "complete";
   if (field.completed === false && field.startedAt) return "part-complete";
   if (numberValue(field.bales) > 0) return "complete";
@@ -1987,6 +2020,8 @@ function normaliseStatus(field) {
 
 function fieldStatusLabel(field) {
   switch (normaliseStatus(field)) {
+    case "combined":
+      return "Combined";
     case "part-complete":
       return "Part complete";
     case "complete":
@@ -1998,6 +2033,8 @@ function fieldStatusLabel(field) {
 
 function fieldStatusColor(field) {
   switch (normaliseStatus(field)) {
+    case "combined":
+      return "#c64232";
     case "part-complete":
       return "#d99a2b";
     case "complete":

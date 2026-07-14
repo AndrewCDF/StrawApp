@@ -297,6 +297,13 @@ main {
   grid-template-columns: 1fr auto;
 }
 
+.stage-choice-actions {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 14px;
+}
+
 .primary-action,
 .secondary-action,
 .danger-action,
