@@ -234,6 +234,33 @@ main {
   padding: 12px;
 }
 
+.customer-totals-card summary {
+  align-items: center;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  list-style: none;
+}
+
+.customer-totals-card summary::-webkit-details-marker {
+  display: none;
+}
+
+.customer-totals-card summary span {
+  color: var(--brand);
+  font-size: 1.2rem;
+  font-weight: 900;
+  transition: transform 0.18s ease;
+}
+
+.customer-totals-card[open] summary {
+  margin-bottom: 10px;
+}
+
+.customer-totals-card[open] summary span {
+  transform: rotate(180deg);
+}
+
 .customer-totals-list {
   display: grid;
   gap: 8px;

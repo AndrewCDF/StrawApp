@@ -10,7 +10,7 @@
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="preconnect" href="https://unpkg.com">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-    <link rel="stylesheet" href="styles.css?v=20260714-5">
+    <link rel="stylesheet" href="styles.css?v=20260714-6">
   </head>
   <body>
     <div class="app-shell">
@@ -38,12 +38,13 @@
 
           <div class="crop-grid" id="cropTotals"></div>
 
-          <div class="customer-totals-card">
-            <div class="panel-heading">
+          <details class="customer-totals-card">
+            <summary>
               <h2>Customer totals</h2>
-            </div>
+              <span aria-hidden="true">⌄</span>
+            </summary>
             <div class="customer-totals-list" id="customerTotals"></div>
-          </div>
+          </details>
 
           <div class="quick-actions">
             <button class="primary-action" id="addFieldButton" type="button">Add field</button>
@@ -475,6 +476,6 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="app.js?v=20260714-7"></script>
+    <script src="app.js?v=20260714-8"></script>
   </body>
 </html>
