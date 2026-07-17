@@ -58,6 +58,9 @@ function collectElements() {
     "seasonTotal",
     "customerTotals",
     "cropTotals",
+    "dailyFieldsTotal",
+    "dailyBalesTotal",
+    "dailyMoistureAverage",
     "recentFields",
     "fieldList",
     "estimatedStock",
@@ -512,7 +515,16 @@ function renderTotals() {
     `;
   }).join("");
 
+  renderDailyTotals();
   renderCustomerTotals();
+}
+
+function renderDailyTotals() {
+  const todayFields = state.fields.filter((field) => isFieldCompleted(field) && isToday(field.finishedAt));
+  const moisture = averageMoisture(todayFields);
+  els.dailyFieldsTotal.textContent = formatNumber(todayFields.length);
+  els.dailyBalesTotal.textContent = formatNumber(todayFields.reduce((sum, field) => sum + numberValue(field.bales), 0));
+  els.dailyMoistureAverage.textContent = moisture === "" ? "-" : `${formatNumber(moisture)}%`;
 }
 
 function renderCustomerTotals() {
@@ -1776,6 +1788,14 @@ function csvCell(value) {
 function formatDate(value) {
   if (!value) return "";
   return new Date(value).toLocaleString("en-GB");
+}
+
+function isToday(value) {
+  if (!value) return false;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return false;
+  const today = new Date();
+  return date.toDateString() === today.toDateString();
 }
 
 function dateTimeInputValue(value) {

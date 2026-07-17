@@ -10,7 +10,7 @@
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="preconnect" href="https://unpkg.com">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-    <link rel="stylesheet" href="styles.css?v=20260717-4">
+    <link rel="stylesheet" href="styles.css?v=20260717-5">
   </head>
   <body>
     <div class="app-shell">
@@ -37,6 +37,21 @@
           </div>
 
           <div class="crop-grid" id="cropTotals"></div>
+
+          <div class="daily-totals">
+            <article>
+              <span>Fields today</span>
+              <strong id="dailyFieldsTotal">0</strong>
+            </article>
+            <article>
+              <span>Bales today</span>
+              <strong id="dailyBalesTotal">0</strong>
+            </article>
+            <article>
+              <span>Avg moisture</span>
+              <strong id="dailyMoistureAverage">-</strong>
+            </article>
+          </div>
 
           <details class="customer-totals-card">
             <summary>
@@ -400,6 +415,6 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="app.js?v=20260717-5"></script>
+    <script src="app.js?v=20260717-6"></script>
   </body>
 </html>
