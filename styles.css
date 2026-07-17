@@ -53,7 +53,7 @@ button {
 
 .app-shell {
   min-height: 100dvh;
-  padding: max(14px, env(safe-area-inset-top)) 14px calc(88px + env(safe-area-inset-bottom));
+  padding: max(14px, env(safe-area-inset-top)) 14px calc(150px + env(safe-area-inset-bottom));
 }
 
 .topbar {
@@ -62,11 +62,6 @@ button {
   justify-content: space-between;
   margin: 2px auto 16px;
   max-width: 980px;
-}
-
-.topbar-actions {
-  display: flex;
-  gap: 8px;
 }
 
 .eyebrow {
@@ -102,7 +97,7 @@ body.map-mode {
 }
 
 body.map-mode .app-shell {
-  padding: 0 0 calc(74px + env(safe-area-inset-bottom));
+  padding: 0 0 calc(136px + env(safe-area-inset-bottom));
 }
 
 body.map-mode .topbar {
@@ -412,6 +407,33 @@ button:disabled {
   padding: 0 12px;
 }
 
+.bottom-actions {
+  backdrop-filter: blur(20px);
+  background: rgba(251, 252, 247, 0.94);
+  border-top: 1px solid var(--line);
+  bottom: calc(70px + env(safe-area-inset-bottom));
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  left: 0;
+  padding: 8px 10px;
+  position: fixed;
+  right: 0;
+  z-index: 801;
+}
+
+.utility-action {
+  background: var(--brand);
+  border: 0;
+  border-radius: 8px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.86rem;
+  font-weight: 850;
+  min-height: 44px;
+  padding: 0 10px;
+}
+
 .icon-button {
   font-size: 1.4rem;
   height: 48px;
@@ -636,7 +658,7 @@ button:disabled {
 body.map-mode .map-wrap {
   border: 0;
   border-radius: 0;
-  height: calc(100dvh - 74px - env(safe-area-inset-bottom));
+  height: calc(100dvh - 136px - env(safe-area-inset-bottom));
   min-height: 0;
 }
 

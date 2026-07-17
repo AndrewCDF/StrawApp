@@ -12,7 +12,7 @@
     <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/straw-bales-icon-192.png">
     <link rel="preconnect" href="https://unpkg.com">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-    <link rel="stylesheet" href="styles.css?v=20260717-5">
+    <link rel="stylesheet" href="styles.css?v=20260717-6">
   </head>
   <body>
     <div class="app-shell">
@@ -20,17 +20,6 @@
         <div>
           <p class="eyebrow">Harvest <span id="seasonYear"></span></p>
           <h1>Straw Bales</h1>
-        </div>
-        <div class="topbar-actions">
-          <button class="icon-button" id="updateAppButton" type="button" aria-label="Update app" title="Update app">
-            <span aria-hidden="true">↻</span>
-          </button>
-          <button class="icon-button" id="backupButton" type="button" aria-label="Download backup" title="Download backup">
-            <span aria-hidden="true">▣</span>
-          </button>
-          <button class="icon-button" id="exportTopButton" type="button" aria-label="Export XLSX" title="Export XLSX">
-            <span aria-hidden="true">⇩</span>
-          </button>
         </div>
       </header>
 
@@ -150,6 +139,12 @@
         </section>
 
       </main>
+
+      <div class="bottom-actions" aria-label="App actions">
+        <button class="utility-action" id="updateAppButton" type="button">Update</button>
+        <button class="utility-action" id="backupButton" type="button">Download</button>
+        <button class="utility-action" id="exportTopButton" type="button">Export</button>
+      </div>
 
       <nav class="bottom-nav" aria-label="Main">
         <button class="nav-button active" data-nav="dashboard" type="button">
@@ -415,6 +410,6 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="app.js?v=20260717-8"></script>
+    <script src="app.js?v=20260717-9"></script>
   </body>
 </html>
