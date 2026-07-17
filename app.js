@@ -154,7 +154,6 @@ function bindEvents() {
     button.addEventListener("click", () => showView(button.dataset.nav));
   });
 
-  document.getElementById("addFieldButton").addEventListener("click", startDropPinMode);
   document.getElementById("addFieldButtonFields").addEventListener("click", startDropPinMode);
   els.closePinChoiceButton.addEventListener("click", closePinChoiceDialog);
   els.pinChoiceDialog.addEventListener("cancel", () => clearPendingPin(false));
