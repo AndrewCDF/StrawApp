@@ -1060,10 +1060,27 @@ function makePendingIcon() {
 }
 
 function makePinBaleLabel(field) {
-  if (normaliseStatus(field) === "combined") return "C";
+  if (normaliseStatus(field) === "combined") return `C-${cropPinCode(field?.crop)}`;
   const bales = Math.round(numberValue(field?.bales));
   if (bales >= 10000) return `${Math.round(bales / 1000)}k`;
   return String(bales);
+}
+
+function cropPinCode(value) {
+  switch (normalizeCrop(value)) {
+    case "Wheat":
+      return "W";
+    case "Barley":
+      return "B";
+    case "Spring Barley":
+      return "SB";
+    case "Oats":
+      return "O";
+    case "Hay":
+      return "H";
+    default:
+      return "Oth";
+  }
 }
 
 function setPendingPin(lat, lng) {
