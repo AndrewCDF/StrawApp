@@ -337,6 +337,7 @@ function reloadWhenServerReturns(attempt = 0) {
 }
 
 function showView(name) {
+  document.body.classList.toggle("map-mode", name === "map");
   document.querySelectorAll(".view").forEach((view) => view.classList.remove("active"));
   document.getElementById(`${name}View`).classList.add("active");
 

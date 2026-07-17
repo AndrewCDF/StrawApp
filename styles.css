@@ -97,6 +97,22 @@ main {
   max-width: 980px;
 }
 
+body.map-mode {
+  overflow: hidden;
+}
+
+body.map-mode .app-shell {
+  padding: 0 0 calc(74px + env(safe-area-inset-bottom));
+}
+
+body.map-mode .topbar {
+  display: none;
+}
+
+body.map-mode main {
+  max-width: none;
+}
+
 .view {
   display: none;
 }
@@ -584,6 +600,18 @@ button:disabled {
 #map {
   height: min(68dvh, 680px);
   min-height: 500px;
+}
+
+body.map-mode .map-wrap {
+  border: 0;
+  border-radius: 0;
+  height: calc(100dvh - 74px - env(safe-area-inset-bottom));
+  min-height: 0;
+}
+
+body.map-mode #map {
+  height: 100%;
+  min-height: 0;
 }
 
 .map-fallback {
