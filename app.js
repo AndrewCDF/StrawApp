@@ -152,7 +152,6 @@ function bindEvents() {
 
   document.getElementById("addFieldButton").addEventListener("click", startDropPinMode);
   document.getElementById("addFieldButtonFields").addEventListener("click", startDropPinMode);
-  document.getElementById("clearPendingPinButton").addEventListener("click", clearPendingPin);
   els.closePinChoiceButton.addEventListener("click", closePinChoiceDialog);
   els.pinChoiceDialog.addEventListener("cancel", () => clearPendingPin(false));
   els.combinedFieldButton.addEventListener("click", () => choosePinnedFieldStage("combined"));

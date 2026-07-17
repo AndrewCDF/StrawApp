@@ -297,7 +297,6 @@ main {
 
 .quick-actions,
 .spreadsheet-bar,
-.map-actions,
 .toolbar,
 .sheet-filters {
   display: grid;
@@ -307,13 +306,8 @@ main {
 }
 
 .spreadsheet-bar,
-.map-actions,
 .sheet-filters {
   grid-template-columns: 1fr 1fr;
-}
-
-.map-actions {
-  grid-template-columns: 1fr;
 }
 
 .quick-actions {
