@@ -73,6 +73,7 @@ function collectElements() {
     "stockMovementsList",
     "fieldSearch",
     "updateAppButton",
+    "backupButton",
     "mapFallback",
     "mapPrompt",
     "pinChoiceDialog",
@@ -160,6 +161,7 @@ function bindEvents() {
   els.combinedFieldButton.addEventListener("click", () => choosePinnedFieldStage("combined"));
   els.baledFieldButton.addEventListener("click", () => choosePinnedFieldStage("complete"));
   els.updateAppButton.addEventListener("click", updateAppFromGithub);
+  els.backupButton.addEventListener("click", exportBackup);
   document.getElementById("exportTopButton").addEventListener("click", exportXlsx);
   document.getElementById("addStocktakeButton").addEventListener("click", openStocktakeDialog);
   document.getElementById("addLoadButton").addEventListener("click", () => openLoadDialog());
@@ -1311,6 +1313,29 @@ function exportCsv() {
   downloadBlob(new Blob([csv], { type: "text/csv;charset=utf-8" }), makeFileName("csv"));
 }
 
+async function exportBackup() {
+  const backupState = await getBackupState();
+  const backup = {
+    app: "Straw Bale Records",
+    backupVersion: 1,
+    exportedAt: new Date().toISOString(),
+    data: normaliseClientState(backupState)
+  };
+  const json = JSON.stringify(backup, null, 2);
+  downloadBlob(new Blob([json], { type: "application/json;charset=utf-8" }), makeBackupFileName());
+}
+
+async function getBackupState() {
+  if (!serverStorageAvailable) return state;
+  try {
+    const response = await fetch("/api/state", { cache: "no-store" });
+    if (!response.ok) return state;
+    return await response.json();
+  } catch (error) {
+    return state;
+  }
+}
+
 function exportXlsx() {
   const files = makeXlsxFiles(
     makeSpreadsheetRows(getFilteredWorkedFields()),
@@ -1768,6 +1793,11 @@ function downloadBlob(blob, filename) {
 function makeFileName(extension) {
   const stamp = new Date().toISOString().slice(0, 10);
   return `straw-bales-${stamp}.${extension}`;
+}
+
+function makeBackupFileName() {
+  const stamp = new Date().toISOString().replaceAll(":", "-").slice(0, 19);
+  return `straw-bales-backup-${stamp}.json`;
 }
 
 function columnName(index) {
