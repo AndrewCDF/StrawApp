@@ -1062,8 +1062,8 @@ function makePendingIcon() {
 function makePinBaleLabel(field) {
   if (normaliseStatus(field) === "combined") return `C-${cropPinCode(field?.crop)}`;
   const bales = Math.round(numberValue(field?.bales));
-  if (bales >= 10000) return `${Math.round(bales / 1000)}k`;
-  return String(bales);
+  const baleLabel = bales >= 10000 ? `${Math.round(bales / 1000)}k` : String(bales);
+  return `${baleLabel}-${cropPinCode(field?.crop)}`;
 }
 
 function cropPinCode(value) {

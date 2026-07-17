@@ -658,9 +658,9 @@ button:disabled {
 
 .crop-marker b {
   display: block;
-  font-size: 0.68rem;
+  font-size: 0.58rem;
   letter-spacing: 0;
-  max-width: 34px;
+  max-width: 36px;
   overflow: hidden;
   text-align: center;
   text-overflow: ellipsis;
