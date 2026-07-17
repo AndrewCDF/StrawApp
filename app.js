@@ -983,9 +983,13 @@ function initMap() {
 
   map = L.map("map", { zoomControl: false }).setView(DEFAULT_MAP_CENTER, 11);
   L.control.zoom({ position: "bottomright" }).addTo(map);
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
     maxZoom: 19,
-    attribution: "&copy; OpenStreetMap"
+    attribution: "Tiles &copy; Esri"
+  }).addTo(map);
+  L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}", {
+    maxZoom: 19,
+    attribution: "Labels &copy; Esri"
   }).addTo(map);
   markerLayer = L.layerGroup().addTo(map);
 
